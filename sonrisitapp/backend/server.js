@@ -9,6 +9,8 @@ require('dotenv').config();
 
 const usuariosRoutes = require('./routes/usuarios');
 const turnosRoutes = require('./routes/turnos');
+const testRoutes = require('./routes/test');
+const notificacionesRoutes = require('./routes/notificaciones');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -40,7 +42,12 @@ const loginLimiter = rateLimit({
 });
 
 app.use(limiter);
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeInput);
 
@@ -72,6 +79,8 @@ app.post('/login', loginLimiter, require('./controllers/usuarioController').logi
 // Rutas
 app.use('/usuarios', usuariosRoutes);
 app.use('/turnos', turnosRoutes);
+app.use('/test', testRoutes);
+app.use('/notificaciones', notificacionesRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

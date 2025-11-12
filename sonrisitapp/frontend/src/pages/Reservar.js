@@ -39,9 +39,13 @@ const Reservar = ({ user, setUser }) => {
     const cargarTurnos = async () => {
         try {
             const data = await api.listarTurnos();
-            setTurnos(data);
+            console.log('RESERVAR: Turnos cargados:', data);
+            // Asegurar que data sea un array
+            setTurnos(Array.isArray(data) ? data : []);
         } catch (error) {
+            console.error('RESERVAR: Error al cargar turnos:', error);
             setError('Error al cargar turnos');
+            setTurnos([]); // Asegurar que turnos sea un array vacío en caso de error
         }
     };
 
@@ -94,6 +98,12 @@ const Reservar = ({ user, setUser }) => {
     };
 
     const turnoOcupado = (fecha, hora) => {
+        // Verificar que turnos sea un array antes de usar .some()
+        if (!Array.isArray(turnos)) {
+            console.warn('RESERVAR: turnos no es un array:', turnos);
+            return false;
+        }
+        
         return turnos.some(turno => 
             turno.fecha === fecha && 
             turno.hora === hora && 

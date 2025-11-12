@@ -1,4 +1,4 @@
-/* Estilos personalizados para Tailwind CSS */
+/* SonrisitApp - Estilos personalizados */
 .App {
     min-height: 100vh;
 }
@@ -10,4 +10,160 @@
         'wght' 400,
         'GRAD' 0,
         'opsz' 24;
+}
+
+/* Animaciones personalizadas */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 167, 157, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(0, 167, 157, 0.6);
+    }
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Clases de utilidad personalizadas */
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+    background: linear-gradient(-45deg, #00A79D, #FF8C42, #7ED321, #00A79D);
+    background-size: 400% 400%;
+    animation: gradient-shift 4s ease infinite;
+}
+
+/* Efectos de hover mejorados */
+.hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Scroll suave personalizado */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Efectos de glassmorphism */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Animación de entrada para elementos */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+
+.fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Efectos de partículas de fondo */
+.particles-bg {
+    position: relative;
+    overflow: hidden;
+}
+
+.particles-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(0, 167, 157, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 140, 66, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(126, 211, 33, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Mejoras para modo oscuro */
+.dark .glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animación de carga para contadores */
+.counter-loading {
+    background: linear-gradient(90deg, transparent, rgba(0, 167, 157, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Efectos de hover para botones */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+/* Responsive mejoras */
+@media (max-width: 768px) {
+    .animate-float {
+        animation-duration: 2s;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px) scale(1.01);
+    }
 }

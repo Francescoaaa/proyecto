@@ -10,6 +10,10 @@ import Admin from './pages/Admin';
 import Perfil from './pages/Perfil';
 import Toast from './components/Toast';
 import LoadingScreen from './components/LoadingScreen';
+import ServerStatus from './components/ServerStatus';
+import AuthDebug from './components/AuthDebug';
+import ErrorBoundary from './components/ErrorBoundary';
+import NotFound from './components/NotFound';
 import { useToast } from './hooks/useToast';
 
 function App() {
@@ -63,7 +67,17 @@ function App() {
     }, []);
 
     const ProtectedRoute = ({ children }) => {
-        return user ? children : <Navigate to="/login" />;
+        console.log('PROTECTED_ROUTE: Verificando usuario:', user);
+        console.log('PROTECTED_ROUTE: Token en localStorage:', localStorage.getItem('token') ? 'Existe' : 'No existe');
+        console.log('PROTECTED_ROUTE: User en localStorage:', localStorage.getItem('user') ? 'Existe' : 'No existe');
+        
+        if (!user) {
+            console.log('PROTECTED_ROUTE: Usuario no encontrado, redirigiendo a login');
+            return <Navigate to="/login" />;
+        }
+        
+        console.log('PROTECTED_ROUTE: Usuario autenticado, mostrando contenido');
+        return children;
     };
 
     if (isLoading) {
@@ -71,11 +85,12 @@ function App() {
     }
 
     return (
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <div className="App font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-                {/* Loading global para requests */}
-                {globalLoading && <LoadingScreen message={globalLoadingMessage} />}
-                <Routes>
+        <ErrorBoundary>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <div className="App font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+                    {/* Loading global para requests */}
+                    {globalLoading && <LoadingScreen message={globalLoadingMessage} />}
+                    <Routes>
                     <Route 
                         path="/" 
                         element={
@@ -139,7 +154,16 @@ function App() {
                             </ProtectedRoute>
                         } 
                     />
+                    
+                    {/* Página 404 */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
+                
+                {/* Server Status Monitor */}
+                <ServerStatus />
+                
+                {/* Auth Debug (temporal) */}
+                <AuthDebug user={user} />
                 
                 {/* Toast Notifications */}
                 {toasts.map(toast => (
@@ -151,8 +175,9 @@ function App() {
                         onClose={() => removeToast(toast.id)}
                     />
                 ))}
-            </div>
-        </Router>
+                </div>
+            </Router>
+        </ErrorBoundary>
     );
 }
 

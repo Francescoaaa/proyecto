@@ -48,18 +48,32 @@ const Login = ({ setUser }) => {
         setError('');
 
         try {
+            console.log('LOGIN: Iniciando proceso con email:', formData.email);
             const response = await api.login(formData);
+            console.log('LOGIN: Respuesta completa:', response);
             
-            if (response.token) {
+            if (response && response.token && response.user) {
+                console.log('LOGIN: Token y usuario recibidos correctamente');
+                console.log('LOGIN: Token:', response.token.substring(0, 20) + '...');
+                console.log('LOGIN: Usuario:', response.user);
+                
                 localStorage.setItem('token', response.token);
                 localStorage.setItem('user', JSON.stringify(response.user));
+                
+                console.log('LOGIN: Datos guardados en localStorage');
+                console.log('LOGIN: Token guardado:', localStorage.getItem('token') ? 'Sí' : 'No');
+                console.log('LOGIN: Usuario guardado:', localStorage.getItem('user') ? 'Sí' : 'No');
+                
                 setUser(response.user);
+                console.log('LOGIN: Usuario establecido en estado, navegando a /reservar');
                 navigate('/reservar');
             } else {
-                setError(response.error || 'Error al iniciar sesión');
+                console.log('LOGIN: Respuesta inválida:', response);
+                setError(response?.error || 'Respuesta inválida del servidor');
             }
         } catch (error) {
-            setError('Error de conexión');
+            console.error('LOGIN: Error completo:', error);
+            setError(`Error: ${error.message}`);
         } finally {
             setLoading(false);
         }

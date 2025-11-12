@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 const Header = ({ user, setUser }) => {
     const navigate = useNavigate();
@@ -36,19 +37,21 @@ const Header = ({ user, setUser }) => {
                     
                     <div className="flex items-center gap-2">
                         {user ? (
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setShowUserMenu(!showUserMenu)}
-                                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-sm">
-                                        {user.nombre?.charAt(0)?.toUpperCase()}
-                                    </div>
-                                    <span className="hidden md:block text-sm font-medium">{user.nombre}</span>
-                                    <span className="material-symbols-outlined text-sm">
-                                        {showUserMenu ? 'expand_less' : 'expand_more'}
-                                    </span>
-                                </button>
+                            <>
+                                <NotificationBell user={user} />
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-sm">
+                                            {user.nombre?.charAt(0)?.toUpperCase()}
+                                        </div>
+                                        <span className="hidden md:block text-sm font-medium">{user.nombre}</span>
+                                        <span className="material-symbols-outlined text-sm">
+                                            {showUserMenu ? 'expand_less' : 'expand_more'}
+                                        </span>
+                                    </button>
                                 
                                 {showUserMenu && (
                                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -82,6 +85,7 @@ const Header = ({ user, setUser }) => {
                                     </div>
                                 )}
                             </div>
+                                </>
                         ) : (
                             <Link 
                                 to="/login"

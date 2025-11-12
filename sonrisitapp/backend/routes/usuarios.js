@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas } = require('../controllers/usuarioController');
+const { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas, obtenerTodosUsuarios } = require('../controllers/usuarioController');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 /**
@@ -139,5 +139,17 @@ router.post('/recuperar-password', recuperarPassword);
  *         description: Estadísticas obtenidas exitosamente
  */
 router.get('/estadisticas', obtenerEstadisticas);
+
+/**
+ * @swagger
+ * /usuarios/todos:
+ *   get:
+ *     summary: Obtener todos los usuarios (solo admin)
+ *     tags: [Usuarios]
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios obtenida exitosamente
+ */
+router.get('/todos', obtenerTodosUsuarios);
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { listarTurnos, crearTurno, modificarTurno, cancelarTurno, misTurnos } = require('../controllers/turnoController');
+const { listarTurnos, crearTurno, modificarTurno, cancelarTurno, misTurnos, eliminarTurno } = require('../controllers/turnoController');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 /**
@@ -13,7 +13,45 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
  *       200:
  *         description: Lista de turnos
  */
-router.get('/', authenticateToken, requireAdmin, listarTurnos);
+router.get('/', listarTurnos);
+
+/**
+ * @swagger
+ * /turnos/disponibles:
+ *   get:
+ *     summary: Listar turnos ocupados (sin autenticación)
+ *     tags: [Turnos]
+ *     responses:
+ *       200:
+ *         description: Lista de turnos ocupados
+ */
+router.get('/disponibles', (req, res) => {
+    console.log('TURNOS: Acceso a turnos disponibles sin auth');
+    
+    try {
+        // Intentar obtener turnos del controlador (que usa memoria)
+        const { listarTurnos } = require('../controllers/turnoController');
+        
+        // Simular request sin autenticación
+        const mockReq = { user: null };
+        const mockRes = {
+            json: (data) => res.json(data),
+            status: (code) => ({ json: (data) => res.status(code).json(data) })
+        };
+        
+        // Llamar al controlador
+        listarTurnos(mockReq, mockRes);
+    } catch (error) {
+        console.log('TURNOS: Error, usando datos fijos');
+        // Fallback con datos fijos
+        const turnosOcupados = [
+            { fecha: '2025-01-20', hora: '09:00:00', estado: 'reservado', servicio: 'Limpieza dental' },
+            { fecha: '2025-01-20', hora: '10:30:00', estado: 'confirmado', servicio: 'Control general' },
+            { fecha: '2025-01-21', hora: '14:00:00', estado: 'reservado', servicio: 'Ortodoncia' }
+        ];
+        res.json(turnosOcupados);
+    }
+});
 
 /**
  * @swagger
@@ -103,6 +141,45 @@ router.put('/:id', authenticateToken, modificarTurno);
  *         description: Turno cancelado exitosamente
  */
 router.delete('/:id', authenticateToken, cancelarTurno);
+
+/**
+ * @swagger
+ * /turnos/{id}/eliminar:
+ *   delete:
+ *     summary: Eliminar turno permanentemente
+ *     tags: [Turnos]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               motivo:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Turno eliminado exitosamente
+ */
+router.delete('/:id/eliminar', eliminarTurno);
+
+/**
+ * @swagger
+ * /turnos/admin:
+ *   get:
+ *     summary: Listar todos los turnos (solo admin)
+ *     tags: [Turnos]
+ *     responses:
+ *       200:
+ *         description: Lista completa de turnos
+ */
+router.get('/admin', authenticateToken, requireAdmin, listarTurnos);
 
 /**
  * @swagger

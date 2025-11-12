@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import NotificationBell from '../components/NotificationBell';
 
 const MisTurnos = ({ user, setUser }) => {
     const [turnos, setTurnos] = useState([]);
@@ -161,6 +162,7 @@ const MisTurnos = ({ user, setUser }) => {
                             </div>
                             
                             <div className="flex items-center gap-4">
+                                <NotificationBell user={user} />
                                 <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-primary/20 flex items-center justify-center text-primary font-bold">
                                     {user?.nombre?.charAt(0)?.toUpperCase()}
                                 </div>

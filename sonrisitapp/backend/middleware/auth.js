@@ -2,17 +2,34 @@ const jwt = require('jsonwebtoken');
 
 // Middleware de autenticación JWT
 const authenticateToken = (req, res, next) => {
+    console.log('AUTH_MIDDLEWARE: Verificando autenticación para:', req.method, req.path);
+    
     const authHeader = req.headers['authorization'];
+    console.log('AUTH_MIDDLEWARE: Authorization header:', authHeader ? 'Presente' : 'Ausente');
+    
     const token = authHeader && authHeader.split(' ')[1];
+    console.log('AUTH_MIDDLEWARE: Token extraído:', token ? 'Sí' : 'No');
 
     if (!token) {
+        console.log('AUTH_MIDDLEWARE: Token no encontrado, devolviendo 401');
         return res.status(401).json({ error: 'Token de acceso requerido' });
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
+            console.log('AUTH_MIDDLEWARE: Error al verificar token:', err.message);
             return res.status(403).json({ error: 'Token inválido o expirado' });
         }
+        
+        console.log('AUTH_MIDDLEWARE: Token válido para usuario:', user.email, 'rol:', user.rol, 'id:', user.id);
+        
+        // Si es usuario temporal (ID 999), permitir acceso
+        if (user.id === 999) {
+            console.log('AUTH_MIDDLEWARE: Usuario temporal detectado, acceso permitido');
+            req.user = user;
+            return next();
+        }
+        
         req.user = user;
         next();
     });
