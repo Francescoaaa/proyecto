@@ -25,7 +25,7 @@ echo    git init
 echo    git add .
 echo    git commit -m "Initial commit - SonrisitApp"
 echo    git branch -M main
-echo    git remote add origin https://github.com/[TU-USUARIO]/sonrisitapp.git
+echo    git remote add origin https://github.com/Francescoaaa/sonrisitapp.git
 echo    git push -u origin main
 echo.
 
@@ -39,7 +39,7 @@ echo.
 echo 4. INFORMACIÓN PARA ENTREGAR:
 echo.
 echo    📂 Repositorio GitHub:
-echo    https://github.com/[TU-USUARIO]/sonrisitapp
+echo    https://github.com/Francescoaaa/sonrisitapp
 echo.
 echo    🌐 Proyecto Desplegado:
 echo    Frontend: https://sonrisitapp-frontend.onrender.com

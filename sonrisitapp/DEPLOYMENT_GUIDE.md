@@ -14,7 +14,7 @@
 - **Documentación API:** https://sonrisitapp-backend.onrender.com/api-docs
 
 ### 📂 Repositorio GitHub
-- **Repositorio:** https://github.com/[tu-usuario]/sonrisitapp
+- **Repositorio:** https://github.com/Francescoaaa/sonrisitapp
 - **Rama principal:** main
 
 ## 👥 Información del Grupo
@@ -41,7 +41,7 @@ git add .
 git commit -m "Initial commit - SonrisitApp"
 
 # Conectar con GitHub
-git remote add origin https://github.com/[tu-usuario]/sonrisitapp.git
+git remote add origin https://github.com/Francescoaaa/sonrisitapp.git
 
 # Subir código
 git push -u origin main
@@ -95,7 +95,7 @@ Ejecutar el script SQL en la base de datos de Render:
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/[tu-usuario]/sonrisitapp.git
+git clone https://github.com/Francescoaaa/sonrisitapp.git
 cd sonrisitapp
 
 # Instalar dependencias
@@ -159,7 +159,7 @@ SonrisitApp/
 
 Para consultas sobre el proyecto:
 - **Email:** [tu-email@ejemplo.com]
-- **GitHub Issues:** https://github.com/[tu-usuario]/sonrisitapp/issues
+- **GitHub Issues:** https://github.com/Francescoaaa/sonrisitapp/issues
 
 ---
 
