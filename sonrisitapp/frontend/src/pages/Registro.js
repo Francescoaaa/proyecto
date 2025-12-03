@@ -42,7 +42,7 @@ const Registro = () => {
             
             const response = await api.crearUsuario(userData);
             
-            if (response.id) {
+            if (response.message && response.id) {
                 setSuccess('Usuario registrado exitosamente');
                 setTimeout(() => navigate('/login'), 2000);
             } else {
@@ -138,6 +138,20 @@ const Registro = () => {
                                                 value={formData.email}
                                                 onChange={handleChange}
                                                 required
+                                            />
+                                        </label>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="flex flex-col min-w-40 flex-1">
+                                            <p className="text-gray-800 dark:text-gray-200 text-sm font-medium leading-normal pb-2">Teléfono (opcional)</p>
+                                            <input 
+                                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-700 bg-background-light dark:bg-background-dark h-12 placeholder:text-gray-500 dark:placeholder-gray-400 p-3 text-base font-normal leading-normal" 
+                                                placeholder="+54 9 11 1234-5678" 
+                                                type="tel" 
+                                                name="telefono"
+                                                value={formData.telefono}
+                                                onChange={handleChange}
                                             />
                                         </label>
                                     </div>

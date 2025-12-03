@@ -7,6 +7,7 @@ import NotificationBell from '../components/NotificationBell';
 
 const MisTurnos = ({ user, setUser }) => {
     const [turnos, setTurnos] = useState([]);
+    const [servicios, setServicios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('proximos');
@@ -19,14 +20,30 @@ const MisTurnos = ({ user, setUser }) => {
 
     useEffect(() => {
         cargarMisTurnos();
+        cargarServicios();
     }, [user]);
+
+    const cargarServicios = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/servicios');
+            if (response.ok) {
+                const data = await response.json();
+                setServicios(data);
+            }
+        } catch (error) {
+            console.error('Error al cargar servicios:', error);
+        }
+    };
 
     const cargarMisTurnos = async () => {
         try {
+            console.log('MisTurnos: Cargando turnos para usuario ID:', user.id);
             const data = await api.misTurnos(user.id);
+            console.log('MisTurnos: Datos recibidos:', data);
             setTurnos(data);
         } catch (error) {
-            setError('Error al cargar turnos');
+            console.error('MisTurnos: Error al cargar turnos:', error);
+            setError('Error al cargar turnos: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -473,12 +490,9 @@ const MisTurnos = ({ user, setUser }) => {
                                 onChange={handleEditChange}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
                             >
-                                <option value="Limpieza dental">Limpieza dental</option>
-                                <option value="Control general">Control general</option>
-                                <option value="Ortodoncia">Ortodoncia</option>
-                                <option value="Endodoncia">Endodoncia</option>
-                                <option value="Extracción">Extracción</option>
-                                <option value="Blanqueamiento">Blanqueamiento</option>
+                                {servicios.map(servicio => (
+                                    <option key={servicio.id} value={servicio.nombre}>{servicio.nombre}</option>
+                                ))}
                             </select>
                         </div>
                         

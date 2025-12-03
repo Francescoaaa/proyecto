@@ -19,13 +19,7 @@ const Reservar = ({ user, setUser }) => {
     const [hoveredDate, setHoveredDate] = useState(null);
     const [hoveredTime, setHoveredTime] = useState(null);
 
-    const servicios = [
-        'Limpieza dental',
-        'Control general', 
-        'Ortodoncia',
-        'Endodoncia',
-        'Emergencia'
-    ];
+    const [servicios, setServicios] = useState([]);
 
     const horarios = [
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -34,7 +28,24 @@ const Reservar = ({ user, setUser }) => {
 
     useEffect(() => {
         cargarTurnos();
+        cargarServicios();
     }, []);
+
+    const cargarServicios = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/servicios');
+            if (response.ok) {
+                const data = await response.json();
+                setServicios(data.map(s => s.nombre));
+            } else {
+                // Fallback a servicios básicos
+                setServicios(['Limpieza dental', 'Control general', 'Ortodoncia', 'Endodoncia', 'Emergencia']);
+            }
+        } catch (error) {
+            console.error('Error al cargar servicios:', error);
+            setServicios(['Limpieza dental', 'Control general', 'Ortodoncia', 'Endodoncia', 'Emergencia']);
+        }
+    };
 
     const cargarTurnos = async () => {
         try {

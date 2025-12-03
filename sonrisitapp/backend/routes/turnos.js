@@ -183,7 +183,7 @@ router.get('/admin', authenticateToken, requireAdmin, listarTurnos);
 
 /**
  * @swagger
- * /mis-turnos/{usuario_id}:
+ * /turnos/mis-turnos/{usuario_id}:
  *   get:
  *     summary: Obtener turnos de un usuario específico
  *     tags: [Turnos]

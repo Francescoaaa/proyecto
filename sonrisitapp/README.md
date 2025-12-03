@@ -87,6 +87,14 @@ sonrisitapp/
     └── README.md
 ```
 
+## 🚀 Scripts de Instalación Rápida
+
+### Para usuarios nuevos:
+1. **`DIAGNOSE_ISSUES.bat`** - Diagnostica problemas del proyecto
+2. **`INSTALL_DEPENDENCIES.bat`** - Instala todas las dependencias automáticamente
+3. **`SETUP_DATABASE.bat`** - Guía para configurar la base de datos
+4. **`CLEANUP_PROJECT.bat`** - Limpia archivos duplicados y temporales
+
 ## 🛠️ Instalación y Configuración
 
 ### Prerrequisitos

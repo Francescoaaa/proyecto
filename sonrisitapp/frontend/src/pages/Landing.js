@@ -80,16 +80,17 @@ const StatsSection = () => {
                     turnosCompletados: Number(data?.turnosCompletados) || 0
                 };
                 setStats(validatedStats);
+                console.log('Landing: Estadísticas cargadas desde BD:', validatedStats);
             } catch (error) {
-                console.error('Error al cargar estadísticas:', error);
-                // Datos de ejemplo para demostración
+                console.error('Landing: Error al cargar estadísticas:', error);
+                // Mantener valores en 0 si no hay conexión
                 setStats({
-                    usuariosRegistrados: 1250,
-                    turnosReservados: 89,
-                    turnosHoy: 12,
-                    odontologosActivos: 8,
-                    serviciosDisponibles: 15,
-                    turnosCompletados: 3420
+                    usuariosRegistrados: 0,
+                    turnosReservados: 0,
+                    turnosHoy: 0,
+                    odontologosActivos: 0,
+                    serviciosDisponibles: 0,
+                    turnosCompletados: 0
                 });
             }
         };
@@ -380,32 +381,38 @@ const Landing = () => {
                             <h2 className="text-3xl font-bold leading-tight tracking-tight">¿Cómo funciona?</h2>
                         </FadeInSection>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <FadeInSection className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group">
-                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
-                                    <span className="material-symbols-outlined text-4xl">person_add</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Regístrate</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Crea tu cuenta en segundos para acceder a todos nuestros servicios.</p>
-                                </div>
+                            <FadeInSection>
+                                <Link to="/login" className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group cursor-pointer">
+                                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                                        <span className="material-symbols-outlined text-4xl">person_add</span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Regístrate</h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Crea tu cuenta en segundos para acceder a todos nuestros servicios.</p>
+                                    </div>
+                                </Link>
                             </FadeInSection>
-                            <FadeInSection className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group">
-                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
-                                    <span className="material-symbols-outlined text-4xl">calendar_month</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Elige tu Horario</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Selecciona el tratamiento que necesitas y elige la fecha y hora que más te convenga.</p>
-                                </div>
+                            <FadeInSection>
+                                <Link to="/login" className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group cursor-pointer">
+                                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                                        <span className="material-symbols-outlined text-4xl">calendar_month</span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Elige tu Horario</h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Selecciona el tratamiento que necesitas y elige la fecha y hora que más te convenga.</p>
+                                    </div>
+                                </Link>
                             </FadeInSection>
-                            <FadeInSection className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group">
-                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
-                                    <span className="material-symbols-outlined text-4xl">event_available</span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Asiste a tu Cita</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Recibirás un recordatorio. Asiste a tu turno y cuida tu salud dental.</p>
-                                </div>
+                            <FadeInSection>
+                                <Link to="/login" className="flex flex-col items-center text-center gap-4 rounded-lg bg-background-light dark:bg-gray-800/50 p-6 hover:shadow-lg transform hover:-translate-y-2 transition-all duration-300 group cursor-pointer">
+                                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                                        <span className="material-symbols-outlined text-4xl">event_available</span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors">Asiste a tu Cita</h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Recibirás un recordatorio. Asiste a tu turno y cuida tu salud dental.</p>
+                                    </div>
+                                </Link>
                             </FadeInSection>
                         </div>
                     </div>

@@ -58,7 +58,7 @@ const crearTurno = async (req, res) => {
         );
         
         if (conflictos.length > 0) {
-            await connection.end();
+            connection.release();
             return res.status(400).json({ error: 'Ya existe un turno reservado en esa fecha y hora' });
         }
 
@@ -98,7 +98,7 @@ const crearTurno = async (req, res) => {
             console.log('TURNOS_BACKEND: Error al crear notificaciones:', notifError.message);
         }
         
-        await connection.end();
+        connection.release();
         res.status(201).json({ message: 'Turno creado exitosamente', id: turnoId });
     } catch (error) {
         console.error('TURNOS_BACKEND: Error al crear turno:', error);
@@ -117,7 +117,7 @@ const modificarTurno = async (req, res) => {
         // Verificar que el turno existe
         const [turnos] = await connection.execute('SELECT * FROM turnos WHERE id = ?', [id]);
         if (turnos.length === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Turno no encontrado' });
         }
         
@@ -181,7 +181,7 @@ const modificarTurno = async (req, res) => {
             }
         }
         
-        await connection.end();
+        connection.release();
         res.json({ message: 'Turno modificado exitosamente' });
     } catch (error) {
         console.error('TURNOS_BACKEND: Error al modificar turno:', error);
@@ -202,11 +202,11 @@ const cancelarTurno = async (req, res) => {
         );
         
         if (result.affectedRows === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Turno no encontrado' });
         }
         
-        await connection.end();
+        connection.release();
         console.log('TURNOS_BACKEND: Turno cancelado en BD');
         res.json({ message: 'Turno cancelado exitosamente' });
     } catch (error) {
@@ -227,7 +227,7 @@ const eliminarTurno = async (req, res) => {
         const [turnos] = await connection.execute('SELECT * FROM turnos WHERE id = ?', [id]);
         
         if (turnos.length === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Turno no encontrado' });
         }
         
@@ -238,7 +238,7 @@ const eliminarTurno = async (req, res) => {
             [id]
         );
         
-        await connection.end();
+        connection.release();
         console.log('TURNOS_BACKEND: Turno eliminado de BD');
         
         res.json({ 
@@ -258,16 +258,21 @@ const misTurnos = async (req, res) => {
         console.log('TURNOS_BACKEND: Obteniendo turnos para usuario:', usuario_id);
         
         const connection = await createConnection();
-        const [turnos] = await connection.execute(`
-            SELECT t.*, s.nombre as servicio
-            FROM turnos t 
-            LEFT JOIN servicios s ON t.servicio_id = s.id
-            WHERE t.usuario_id = ? 
-            ORDER BY t.fecha, t.hora
-        `, [usuario_id]);
-        await connection.end();
-        console.log('TURNOS_BACKEND: Turnos desde BD para usuario:', turnos.length);
-        res.json(turnos || []);
+        
+        try {
+            const [turnos] = await connection.execute(`
+                SELECT t.*, s.nombre as servicio
+                FROM turnos t 
+                LEFT JOIN servicios s ON t.servicio_id = s.id
+                WHERE t.usuario_id = ? 
+                ORDER BY t.fecha, t.hora
+            `, [usuario_id]);
+            
+            console.log('TURNOS_BACKEND: Turnos desde BD para usuario:', turnos.length);
+            res.json(turnos || []);
+        } finally {
+            connection.release();
+        }
     } catch (error) {
         console.error('TURNOS_BACKEND: Error al obtener mis turnos:', error);
         res.status(500).json({ error: 'Error al obtener turnos' });

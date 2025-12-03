@@ -165,11 +165,28 @@ const api = {
     },
 
     misTurnos: async (usuarioId) => {
-        const response = await fetch(`${API_BASE_URL}/turnos/mis-turnos/${usuarioId}`, {
-            headers: getAuthHeaders()
-        });
-        handleAuthError(response);
-        return response.json();
+        try {
+            console.log('API: Obteniendo mis turnos para usuario:', usuarioId);
+            const response = await fetch(`${API_BASE_URL}/turnos/mis-turnos/${usuarioId}`, {
+                headers: getAuthHeaders()
+            });
+            
+            console.log('API: Response status:', response.status);
+            console.log('API: Response ok:', response.ok);
+            
+            handleAuthError(response);
+            
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('API: Turnos recibidos:', data);
+            return data;
+        } catch (error) {
+            console.error('API: Error en misTurnos:', error);
+            throw error;
+        }
     },
 
     // Usuario

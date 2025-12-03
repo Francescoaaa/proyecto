@@ -15,7 +15,7 @@ const crearUsuario = async (req, res) => {
         // Verificar si el email ya existe
         const [existing] = await connection.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
         if (existing.length > 0) {
-            await connection.end();
+            connection.release();
             return res.status(400).json({ error: 'El email ya está registrado' });
         }
 
@@ -26,7 +26,7 @@ const crearUsuario = async (req, res) => {
             [nombre, email, hashedPassword, telefono]
         );
         
-        await connection.end();
+        connection.release();
         res.status(201).json({ message: 'Usuario creado exitosamente', id: result.insertId });
     } catch (error) {
         console.error(error);
@@ -94,7 +94,7 @@ const actualizarUsuario = async (req, res) => {
         // Verificar que el usuario existe
         const [users] = await connection.execute('SELECT * FROM usuarios WHERE id = ?', [id]);
         if (users.length === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
         
@@ -103,13 +103,13 @@ const actualizarUsuario = async (req, res) => {
         // Si se quiere cambiar la contraseña, verificar la actual
         if (newPassword) {
             if (!currentPassword) {
-                await connection.end();
+                connection.release();
                 return res.status(400).json({ error: 'Contraseña actual requerida' });
             }
             
             const isValidPassword = await bcrypt.compare(currentPassword, user.password);
             if (!isValidPassword) {
-                await connection.end();
+                connection.release();
                 return res.status(400).json({ error: 'Contraseña actual incorrecta' });
             }
             
@@ -126,7 +126,7 @@ const actualizarUsuario = async (req, res) => {
             );
         }
         
-        await connection.end();
+        connection.release();
         res.json({ message: 'Usuario actualizado exitosamente' });
     } catch (error) {
         console.error(error);
@@ -146,7 +146,7 @@ const recuperarPassword = async (req, res) => {
         const [users] = await connection.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
         
         if (users.length === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Email no encontrado' });
         }
 
@@ -160,7 +160,7 @@ const recuperarPassword = async (req, res) => {
             [hashedTempPassword, email]
         );
         
-        await connection.end();
+        connection.release();
         
         // En un entorno real, aquí enviarías un email
         // Por ahora, devolvemos la contraseña temporal en la respuesta
@@ -185,7 +185,7 @@ const obtenerEstadisticas = async (req, res) => {
         const [odontologos] = await connection.execute('SELECT COUNT(*) as total FROM odontologos WHERE activo = 1');
         const [servicios] = await connection.execute('SELECT COUNT(*) as total FROM servicios WHERE activo = 1');
         
-        await connection.end();
+        connection.release();
         
         res.json({
             usuariosRegistrados: usuarios[0].total || 0,
@@ -212,7 +212,7 @@ const obtenerTodosUsuarios = async (req, res) => {
             ORDER BY created_at DESC
         `);
         
-        await connection.end();
+        connection.release();
         console.log('USUARIOS_BACKEND: Usuarios encontrados:', usuarios.length);
         res.json(usuarios || []);
     } catch (error) {
@@ -233,7 +233,7 @@ const actualizarPreferenciasNotificaciones = async (req, res) => {
             [email_notifications, promo_notifications, id]
         );
         
-        await connection.end();
+        connection.release();
         res.json({ message: 'Preferencias actualizadas exitosamente' });
     } catch (error) {
         console.error(error);
@@ -251,19 +251,19 @@ const eliminarCuenta = async (req, res) => {
         // Verificar que el usuario existe y el email coincide
         const [users] = await connection.execute('SELECT email FROM usuarios WHERE id = ?', [id]);
         if (users.length === 0) {
-            await connection.end();
+            connection.release();
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
         
         if (users[0].email !== confirmEmail) {
-            await connection.end();
+            connection.release();
             return res.status(400).json({ error: 'Email de confirmación incorrecto' });
         }
         
         // Eliminar usuario (CASCADE eliminará turnos automáticamente)
         await connection.execute('DELETE FROM usuarios WHERE id = ?', [id]);
         
-        await connection.end();
+        connection.release();
         res.json({ message: 'Cuenta eliminada exitosamente' });
     } catch (error) {
         console.error(error);

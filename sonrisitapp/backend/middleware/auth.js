@@ -23,13 +23,6 @@ const authenticateToken = (req, res, next) => {
         
         console.log('AUTH_MIDDLEWARE: Token válido para usuario:', user.email, 'rol:', user.rol, 'id:', user.id);
         
-        // Si es usuario temporal (ID 999), permitir acceso
-        if (user.id === 999) {
-            console.log('AUTH_MIDDLEWARE: Usuario temporal detectado, acceso permitido');
-            req.user = user;
-            return next();
-        }
-        
         req.user = user;
         next();
     });

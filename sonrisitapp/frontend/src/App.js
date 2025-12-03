@@ -10,8 +10,7 @@ import Admin from './pages/Admin';
 import Perfil from './pages/Perfil';
 import Toast from './components/Toast';
 import LoadingScreen from './components/LoadingScreen';
-import ServerStatus from './components/ServerStatus';
-import AuthDebug from './components/AuthDebug';
+
 import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
 import { useToast } from './hooks/useToast';
@@ -93,22 +92,28 @@ function App() {
                     <Routes>
                     <Route 
                         path="/" 
-                        element={
-                            user ? <Navigate to="/reservar" /> : <Landing />
-                        } 
+                        element={<Landing />} 
                     />
                     
                     <Route 
                         path="/login" 
                         element={
-                            user ? <Navigate to="/reservar" /> : <Login setUser={setUser} />
+                            user ? (
+                                user.rol === 'admin' ? <Navigate to="/admin" /> : <Navigate to="/reservar" />
+                            ) : (
+                                <Login setUser={setUser} />
+                            )
                         } 
                     />
                     
                     <Route 
                         path="/registro" 
                         element={
-                            user ? <Navigate to="/reservar" /> : <Registro />
+                            user ? (
+                                user.rol === 'admin' ? <Navigate to="/admin" /> : <Navigate to="/reservar" />
+                            ) : (
+                                <Registro />
+                            )
                         } 
                     />
                     
@@ -141,7 +146,11 @@ function App() {
                         path="/admin" 
                         element={
                             <ProtectedRoute>
-                                <Admin user={user} setUser={setUser} />
+                                {user?.rol === 'admin' ? (
+                                    <Admin user={user} setUser={setUser} />
+                                ) : (
+                                    <Navigate to="/reservar" />
+                                )}
                             </ProtectedRoute>
                         } 
                     />
@@ -159,11 +168,7 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                 </Routes>
                 
-                {/* Server Status Monitor */}
-                <ServerStatus />
-                
-                {/* Auth Debug (temporal) */}
-                <AuthDebug user={user} />
+
                 
                 {/* Toast Notifications */}
                 {toasts.map(toast => (
