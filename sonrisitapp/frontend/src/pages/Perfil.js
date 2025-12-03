@@ -71,37 +71,40 @@ const Perfil = ({ user, setUser }) => {
                 return;
             }
 
-            // Validar que el usuario confirme escribiendo su email
             const confirmEmail = prompt('Para confirmar, escribe tu email:');
             if (confirmEmail !== user.email) {
                 setError('Email de confirmación incorrecto');
                 return;
             }
 
-            // Por ahora solo mostramos un mensaje
-            alert('Funcionalidad de eliminación de cuenta pendiente de implementación');
-            setShowDeleteModal(false);
+            await api.eliminarCuenta(user.id, confirmEmail);
+            
+            // Limpiar sesión y redirigir
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+            
+            alert('Cuenta eliminada exitosamente');
+            window.location.href = '/login';
         } catch (error) {
-            setError('Error al eliminar la cuenta');
+            setError('Error al eliminar la cuenta: ' + error.message);
+            setShowDeleteModal(false);
         }
     };
 
-    const saveNotificationSettings = () => {
+    const saveNotificationSettings = async () => {
         try {
-            // Validar que el usuario esté autenticado
             const token = localStorage.getItem('token');
             if (!token) {
                 setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
                 return;
             }
 
-            // Guardar configuraciones de notificaciones
-            const settings = {
-                emailNotifications,
-                promoNotifications,
-                timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(`notifications_${user.id}`, JSON.stringify(settings));
+            await api.actualizarPreferenciasNotificaciones(user.id, {
+                email_notifications: emailNotifications,
+                promo_notifications: promoNotifications
+            });
+            
             setSuccess('Preferencias de notificaciones guardadas');
         } catch (error) {
             setError('Error al guardar las preferencias');
@@ -118,6 +121,10 @@ const Perfil = ({ user, setUser }) => {
                 newPassword: '',
                 confirmPassword: ''
             });
+            
+            // Cargar preferencias de notificaciones desde el usuario
+            setEmailNotifications(user.email_notifications !== false);
+            setPromoNotifications(user.promo_notifications === true);
         }
     }, [user]);
 

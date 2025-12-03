@@ -12,6 +12,8 @@ CREATE TABLE usuarios (
     fecha_nacimiento DATE,
     direccion VARCHAR(200),
     rol ENUM('usuario', 'admin', 'odontologo') DEFAULT 'usuario',
+    email_notifications BOOLEAN DEFAULT TRUE,
+    promo_notifications BOOLEAN DEFAULT FALSE,
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

@@ -43,81 +43,41 @@ const login = async (req, res) => {
             return res.status(400).json({ error: 'Email y password son obligatorios' });
         }
 
-        // Usuario de prueba temporal - buscar en BD primero
-        if (email === 'francesco.albini@email.com' || email === 'tronchicrak@gmail.com') {
-            console.log('LOGIN_BACKEND: Usuario Francesco detectado, buscando en BD...');
-            
-            const connection = await createConnection();
-            const [users] = await connection.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
-            
-            if (users.length > 0) {
-                const user = users[0];
-                console.log('LOGIN_BACKEND: Usuario encontrado en BD:', user.id, user.nombre);
-                
-                const token = jwt.sign(
-                    { id: user.id, email: user.email, rol: user.rol || 'usuario' },
-                    process.env.JWT_SECRET,
-                    { expiresIn: '24h' }
-                );
-                
-                await connection.end();
-                return res.json({
-                    message: 'Login exitoso',
-                    token,
-                    user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol || 'usuario' }
-                });
-            } else {
-                // Si no existe en BD, usar datos temporales
-                console.log('LOGIN_BACKEND: Usuario no en BD, usando temporal');
-                await connection.end();
-                
-                const token = jwt.sign(
-                    { id: 999, email: email, rol: 'usuario' },
-                    process.env.JWT_SECRET,
-                    { expiresIn: '24h' }
-                );
-                
-                return res.json({
-                    message: 'Login exitoso',
-                    token,
-                    user: { id: 999, nombre: 'Francesco Albini', email: email, rol: 'usuario' }
-                });
-            }
-        }
-
         const connection = await createConnection();
-        const [users] = await connection.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
-        console.log('LOGIN_BACKEND: Usuarios encontrados:', users.length);
         
-        if (users.length === 0) {
-            await connection.end();
-            console.log('LOGIN_BACKEND: Usuario no encontrado');
-            return res.status(401).json({ error: 'Credenciales inválidas' });
+        try {
+            const [users] = await connection.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
+            console.log('LOGIN_BACKEND: Usuarios encontrados:', users.length);
+            
+            if (users.length === 0) {
+                console.log('LOGIN_BACKEND: Usuario no encontrado');
+                return res.status(401).json({ error: 'Credenciales inválidas' });
+            }
+
+            const user = users[0];
+            console.log('LOGIN_BACKEND: Usuario encontrado:', user.nombre, user.email);
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            console.log('LOGIN_BACKEND: Password válido:', isValidPassword);
+            
+            if (!isValidPassword) {
+                return res.status(401).json({ error: 'Credenciales inválidas' });
+            }
+
+            const token = jwt.sign(
+                { id: user.id, email: user.email, rol: user.rol },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            console.log('LOGIN_BACKEND: Login exitoso para:', user.nombre);
+            res.json({
+                message: 'Login exitoso',
+                token,
+                user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol }
+            });
+        } finally {
+            connection.release();
         }
-
-        const user = users[0];
-        console.log('LOGIN_BACKEND: Usuario encontrado:', user.nombre, user.email);
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        console.log('LOGIN_BACKEND: Password válido:', isValidPassword);
-        
-        if (!isValidPassword) {
-            await connection.end();
-            return res.status(401).json({ error: 'Credenciales inválidas' });
-        }
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email, rol: user.rol },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        await connection.end();
-        console.log('LOGIN_BACKEND: Login exitoso para:', user.nombre);
-        res.json({
-            message: 'Login exitoso',
-            token,
-            user: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol }
-        });
     } catch (error) {
         console.error('LOGIN_BACKEND: Error:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
@@ -218,14 +178,12 @@ const obtenerEstadisticas = async (req, res) => {
     try {
         const connection = await createConnection();
         
-        // Consultas que usan tablas existentes
         const [usuarios] = await connection.execute('SELECT COUNT(*) as total FROM usuarios WHERE rol != "admin"');
         const [turnos] = await connection.execute('SELECT COUNT(*) as total FROM turnos WHERE estado IN ("reservado", "confirmado", "completado")');
         const [turnosHoy] = await connection.execute('SELECT COUNT(*) as total FROM turnos WHERE fecha = CURDATE() AND estado IN ("reservado", "confirmado")');
         const [turnosCompletados] = await connection.execute('SELECT COUNT(*) as total FROM turnos WHERE estado = "completado"');
-        
-        // Servicios disponibles basados en los tipos de servicio únicos en turnos
-        const [servicios] = await connection.execute('SELECT COUNT(DISTINCT servicio) as total FROM turnos');
+        const [odontologos] = await connection.execute('SELECT COUNT(*) as total FROM odontologos WHERE activo = 1');
+        const [servicios] = await connection.execute('SELECT COUNT(*) as total FROM servicios WHERE activo = 1');
         
         await connection.end();
         
@@ -233,21 +191,13 @@ const obtenerEstadisticas = async (req, res) => {
             usuariosRegistrados: usuarios[0].total || 0,
             turnosReservados: turnos[0].total || 0,
             turnosHoy: turnosHoy[0].total || 0,
-            odontologosActivos: 5, // Valor fijo para demostración
-            serviciosDisponibles: Math.max(servicios[0].total || 0, 8), // Mínimo 8 servicios
+            odontologosActivos: odontologos[0].total || 0,
+            serviciosDisponibles: servicios[0].total || 0,
             turnosCompletados: turnosCompletados[0].total || 0
         });
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);
-        // En caso de error, devolver datos de ejemplo
-        res.json({
-            usuariosRegistrados: 1250,
-            turnosReservados: 89,
-            turnosHoy: 12,
-            odontologosActivos: 8,
-            serviciosDisponibles: 15,
-            turnosCompletados: 3420
-        });
+        res.status(500).json({ error: 'Error al obtener estadísticas' });
     }
 };
 
@@ -267,13 +217,67 @@ const obtenerTodosUsuarios = async (req, res) => {
         res.json(usuarios || []);
     } catch (error) {
         console.error('USUARIOS_BACKEND: Error al obtener usuarios:', error);
-        // Fallback con datos de ejemplo
-        res.json([
-            { id: 1, nombre: 'Juan Pérez', email: 'juan.perez@email.com', rol: 'usuario', created_at: '2023-10-26' },
-            { id: 2, nombre: 'María González', email: 'maria.gonzalez@email.com', rol: 'admin', created_at: '2023-09-15' },
-            { id: 3, nombre: 'Carlos Rodriguez', email: 'carlos.r@email.com', rol: 'usuario', created_at: '2023-08-01' }
-        ]);
+        res.status(500).json({ error: 'Error al obtener usuarios' });
     }
 };
 
-module.exports = { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas, obtenerTodosUsuarios };
+const actualizarPreferenciasNotificaciones = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email_notifications, promo_notifications } = req.body;
+        
+        const connection = await createConnection();
+        
+        await connection.execute(
+            'UPDATE usuarios SET email_notifications = ?, promo_notifications = ? WHERE id = ?',
+            [email_notifications, promo_notifications, id]
+        );
+        
+        await connection.end();
+        res.json({ message: 'Preferencias actualizadas exitosamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+
+const eliminarCuenta = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { confirmEmail } = req.body;
+        
+        const connection = await createConnection();
+        
+        // Verificar que el usuario existe y el email coincide
+        const [users] = await connection.execute('SELECT email FROM usuarios WHERE id = ?', [id]);
+        if (users.length === 0) {
+            await connection.end();
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        
+        if (users[0].email !== confirmEmail) {
+            await connection.end();
+            return res.status(400).json({ error: 'Email de confirmación incorrecto' });
+        }
+        
+        // Eliminar usuario (CASCADE eliminará turnos automáticamente)
+        await connection.execute('DELETE FROM usuarios WHERE id = ?', [id]);
+        
+        await connection.end();
+        res.json({ message: 'Cuenta eliminada exitosamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+
+module.exports = { 
+    crearUsuario, 
+    login, 
+    actualizarUsuario, 
+    recuperarPassword, 
+    obtenerEstadisticas, 
+    obtenerTodosUsuarios,
+    actualizarPreferenciasNotificaciones,
+    eliminarCuenta
+};

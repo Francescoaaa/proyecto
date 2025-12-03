@@ -95,121 +95,35 @@ const api = {
     // Turnos
     listarTurnos: async () => {
         try {
-            console.log('API: Intentando listar turnos desde MySQL...');
-            
-            // Primero intentar con autenticación
-            let response = await fetch(`${API_BASE_URL}/turnos`, {
+            console.log('API: Obteniendo turnos desde MySQL...');
+            const response = await fetch(`${API_BASE_URL}/turnos`, {
                 headers: getAuthHeaders()
             });
             
-            console.log('API: listarTurnos response status:', response.status);
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('API: ✅ DATOS REALES desde MySQL:', data);
-                // Marcar que son datos reales
-                if (Array.isArray(data) && data.length > 0) {
-                    data._source = 'mysql';
-                    return data;
-                }
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
             
-            // Si falla, usar ruta temporal
-            if (response.status === 403 || response.status === 401) {
-                console.log('API: Auth fallida, intentando ruta temporal');
-                try {
-                    response = await fetch(`${API_BASE_URL}/turnos/disponibles`);
-                    console.log('API: Ruta temporal response status:', response.status);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('API: Data desde ruta temporal:', data);
-                        return Array.isArray(data) ? data : [];
-                    }
-                } catch (tempError) {
-                    console.log('API: Ruta temporal también falló');
-                }
-            }
-            
-            // Si todo falla, usar datos de ejemplo (CLARAMENTE MARCADOS)
-            console.log('API: ⚠️ USANDO DATOS DE EJEMPLO - MySQL no disponible');
-            
-            // Turnos de ejemplo con datos completos
-            const turnosEjemplo = [
-                { id: 1, usuario_id: 1, usuario_nombre: 'Juan Pérez [EJEMPLO]', fecha: '2025-01-20', hora: '09:00:00', estado: 'reservado', servicio: 'Limpieza dental', observaciones: 'Turno de ejemplo' },
-                { id: 2, usuario_id: 2, usuario_nombre: 'María González [EJEMPLO]', fecha: '2025-01-20', hora: '10:30:00', estado: 'confirmado', servicio: 'Control general', observaciones: 'Turno de ejemplo' },
-                { id: 3, usuario_id: 3, usuario_nombre: 'Carlos Rodriguez [EJEMPLO]', fecha: '2025-01-21', hora: '14:00:00', estado: 'reservado', servicio: 'Ortodoncia', observaciones: 'Turno de ejemplo' },
-                { id: 4, usuario_id: 6, usuario_nombre: 'Francesco Albini [EJEMPLO]', fecha: '2025-01-22', hora: '11:00:00', estado: 'reservado', servicio: 'Blanqueamiento', observaciones: 'Primera consulta' },
-                { id: 5, usuario_id: 1, usuario_nombre: 'Juan Pérez [EJEMPLO]', fecha: '2025-01-23', hora: '15:30:00', estado: 'cancelado', servicio: 'Extracción', observaciones: 'Cancelado por el paciente' }
-            ];
-            
-            const turnosLocales = JSON.parse(localStorage.getItem('turnosLocales') || '[]');
-            console.log('API: Turnos locales encontrados:', turnosLocales.length);
-            
-            // Marcar como datos de ejemplo
-            const todosTurnos = [...turnosEjemplo, ...turnosLocales];
-            todosTurnos._source = 'ejemplo';
-            
-            return todosTurnos;
-            
+            const data = await response.json();
+            console.log('API: Turnos obtenidos:', data.length);
+            return data;
         } catch (error) {
-            console.error('API: Error completo en listarTurnos:', error);
-            
-            // Fallback final con datos de ejemplo marcados
-            console.log('API: ⚠️ FALLBACK FINAL - Usando datos de ejemplo');
-            const turnosLocales = JSON.parse(localStorage.getItem('turnosLocales') || '[]');
-            const turnosEjemplo = [
-                { id: 1, usuario_id: 1, usuario_nombre: 'Juan Pérez [EJEMPLO]', fecha: '2025-01-20', hora: '09:00:00', estado: 'reservado', servicio: 'Limpieza dental', observaciones: 'Turno de ejemplo' },
-                { id: 2, usuario_id: 2, usuario_nombre: 'María González [EJEMPLO]', fecha: '2025-01-20', hora: '10:30:00', estado: 'confirmado', servicio: 'Control general', observaciones: 'Turno de ejemplo' },
-                { id: 3, usuario_id: 3, usuario_nombre: 'Carlos Rodriguez [EJEMPLO]', fecha: '2025-01-21', hora: '14:00:00', estado: 'reservado', servicio: 'Ortodoncia', observaciones: 'Turno de ejemplo' },
-                { id: 4, usuario_id: 6, usuario_nombre: 'Francesco Albini [EJEMPLO]', fecha: '2025-01-22', hora: '11:00:00', estado: 'reservado', servicio: 'Blanqueamiento', observaciones: 'Primera consulta' },
-                { id: 5, usuario_id: 1, usuario_nombre: 'Juan Pérez [EJEMPLO]', fecha: '2025-01-23', hora: '15:30:00', estado: 'cancelado', servicio: 'Extracción', observaciones: 'Cancelado por el paciente' }
-            ];
-            
-            const resultado = [...turnosEjemplo, ...turnosLocales];
-            resultado._source = 'ejemplo';
-            return resultado;
+            console.error('API: Error al obtener turnos:', error);
+            throw error;
         }
     },
 
     crearTurno: async (turnoData) => {
-        try {
-            console.log('API: Intentando crear turno:', turnoData);
-            const response = await fetchWithLoading(`${API_BASE_URL}/turnos`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(turnoData)
-            }, true);
-            
-            const result = await response.json();
-            console.log('API: Turno creado en servidor:', result);
-            return result;
-        } catch (error) {
-            console.error('API: Error al crear turno en servidor:', error);
-            
-            // Simular creación exitosa localmente
-            console.log('API: Simulando creación de turno local');
-            
-            // Guardar en localStorage como backup
-            const turnosLocales = JSON.parse(localStorage.getItem('turnosLocales') || '[]');
-            const nuevoTurno = {
-                id: Date.now(), // ID temporal basado en timestamp
-                ...turnoData,
-                estado: 'reservado',
-                created_at: new Date().toISOString()
-            };
-            
-            turnosLocales.push(nuevoTurno);
-            localStorage.setItem('turnosLocales', JSON.stringify(turnosLocales));
-            
-            console.log('API: Turno guardado localmente:', nuevoTurno);
-            
-            return {
-                message: 'Turno creado exitosamente (modo offline)',
-                id: nuevoTurno.id,
-                offline: true
-            };
-        }
+        console.log('API: Creando turno:', turnoData);
+        const response = await fetchWithLoading(`${API_BASE_URL}/turnos`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(turnoData)
+        }, true);
+        
+        const result = await response.json();
+        console.log('API: Turno creado:', result);
+        return result;
     },
 
     modificarTurno: async (id, turnoData) => {
@@ -279,58 +193,27 @@ const api = {
     },
 
     obtenerEstadisticas: async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/usuarios/estadisticas`);
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        } catch (error) {
-            console.error('Error al obtener estadísticas:', error);
-            // Devolver datos de ejemplo inmediatamente en caso de error
-            return {
-                usuariosRegistrados: 1250,
-                turnosReservados: 89,
-                turnosHoy: 12,
-                odontologosActivos: 8,
-                serviciosDisponibles: 15,
-                turnosCompletados: 3420
-            };
+        const response = await fetch(`${API_BASE_URL}/usuarios/estadisticas`);
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
+        return response.json();
     },
 
     // Obtener todos los usuarios (solo admin)
     obtenerUsuarios: async () => {
-        try {
-            console.log('API: Intentando obtener usuarios desde MySQL...');
-            const response = await fetch(`${API_BASE_URL}/usuarios/todos`, {
-                headers: getAuthHeaders()
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            if (Array.isArray(data) && data.length > 0) {
-                console.log('API: ✅ USUARIOS REALES desde MySQL:', data);
-                data._source = 'mysql';
-                return data;
-            }
-        } catch (error) {
-            console.error('API: ⚠️ Error al obtener usuarios desde MySQL:', error);
+        console.log('API: Obteniendo usuarios desde MySQL...');
+        const response = await fetch(`${API_BASE_URL}/usuarios/todos`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
         
-        // Fallback con datos de ejemplo claramente marcados
-        console.log('API: ⚠️ USANDO USUARIOS DE EJEMPLO');
-        const usuariosEjemplo = [
-            { id: 1, nombre: 'Juan Pérez [EJEMPLO]', email: 'juan.perez@email.com', rol: 'usuario', created_at: '2023-10-26' },
-            { id: 2, nombre: 'María González [EJEMPLO]', email: 'maria.gonzalez@email.com', rol: 'admin', created_at: '2023-09-15' },
-            { id: 3, nombre: 'Carlos Rodriguez [EJEMPLO]', email: 'carlos.r@email.com', rol: 'usuario', created_at: '2023-08-01' },
-            { id: 6, nombre: 'Francesco Albini [EJEMPLO]', email: 'tronchicrak@gmail.com', rol: 'usuario', created_at: '2025-01-15' }
-        ];
-        usuariosEjemplo._source = 'ejemplo';
-        return usuariosEjemplo;
+        const data = await response.json();
+        console.log('API: Usuarios obtenidos:', data.length);
+        return data;
     },
 
     // Métodos de notificaciones
@@ -384,6 +267,28 @@ const api = {
             console.error('API: Error al marcar notificación:', error);
             throw error;
         }
+    },
+
+    // Preferencias de notificaciones
+    actualizarPreferenciasNotificaciones: async (userId, preferences) => {
+        const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/notificaciones`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(preferences)
+        });
+        handleAuthError(response);
+        return response.json();
+    },
+
+    // Eliminar cuenta
+    eliminarCuenta: async (userId, confirmEmail) => {
+        const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/eliminar`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ confirmEmail })
+        });
+        handleAuthError(response);
+        return response.json();
     }
 };
 

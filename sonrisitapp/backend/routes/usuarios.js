@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas, obtenerTodosUsuarios } = require('../controllers/usuarioController');
+const { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas, obtenerTodosUsuarios, actualizarPreferenciasNotificaciones, eliminarCuenta } = require('../controllers/usuarioController');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 /**
@@ -151,5 +151,67 @@ router.get('/estadisticas', obtenerEstadisticas);
  *         description: Lista de usuarios obtenida exitosamente
  */
 router.get('/todos', obtenerTodosUsuarios);
+
+/**
+ * @swagger
+ * /usuarios/{id}/notificaciones:
+ *   put:
+ *     summary: Actualizar preferencias de notificaciones
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email_notifications:
+ *                 type: boolean
+ *               promo_notifications:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Preferencias actualizadas exitosamente
+ */
+router.put('/:id/notificaciones', authenticateToken, actualizarPreferenciasNotificaciones);
+
+/**
+ * @swagger
+ * /usuarios/{id}/eliminar:
+ *   delete:
+ *     summary: Eliminar cuenta de usuario
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - confirmEmail
+ *             properties:
+ *               confirmEmail:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Cuenta eliminada exitosamente
+ *       400:
+ *         description: Email de confirmación incorrecto
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.delete('/:id/eliminar', authenticateToken, eliminarCuenta);
 
 module.exports = router;
