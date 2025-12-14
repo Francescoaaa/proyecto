@@ -1,15 +1,19 @@
 -- =====================================================
--- BASE DE DATOS POSTGRESQL - SONRISITAPP
+-- BASE DE DATOS MYSQL - SONRISITAPP
 -- =====================================================
 
+-- Crear y usar la base de datos
+CREATE DATABASE IF NOT EXISTS sonrisitapp;
+USE sonrisitapp;
+
 -- Eliminar tablas existentes en orden correcto (por dependencias)
-DROP TABLE IF EXISTS notificaciones CASCADE;
-DROP TABLE IF EXISTS historial_medico CASCADE;
-DROP TABLE IF EXISTS turnos CASCADE;
-DROP TABLE IF EXISTS horarios_atencion CASCADE;
-DROP TABLE IF EXISTS usuarios CASCADE;
-DROP TABLE IF EXISTS odontologos CASCADE;
-DROP TABLE IF EXISTS servicios CASCADE;
+DROP TABLE IF EXISTS notificaciones;
+DROP TABLE IF EXISTS historial_medico;
+DROP TABLE IF EXISTS turnos;
+DROP TABLE IF EXISTS horarios_atencion;
+DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS odontologos;
+DROP TABLE IF EXISTS servicios;
 
 -- =====================================================
 -- CREACIÓN DE TABLAS
@@ -17,24 +21,24 @@ DROP TABLE IF EXISTS servicios CASCADE;
 
 -- Tabla de usuarios
 CREATE TABLE usuarios (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     telefono VARCHAR(20),
     fecha_nacimiento DATE,
     direccion VARCHAR(200),
-    rol VARCHAR(20) DEFAULT 'usuario' CHECK (rol IN ('usuario', 'admin', 'odontologo')),
+    rol ENUM('usuario', 'admin', 'odontologo') DEFAULT 'usuario',
     email_notifications BOOLEAN DEFAULT TRUE,
     promo_notifications BOOLEAN DEFAULT FALSE,
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Tabla de odontólogos
 CREATE TABLE odontologos (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     especialidad VARCHAR(100),
     matricula VARCHAR(50) UNIQUE,
@@ -46,10 +50,10 @@ CREATE TABLE odontologos (
 
 -- Tabla de servicios
 CREATE TABLE servicios (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
-    duracion_minutos INTEGER DEFAULT 30,
+    duracion_minutos INT DEFAULT 30,
     precio DECIMAL(10,2) DEFAULT 0.00,
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -57,29 +61,29 @@ CREATE TABLE servicios (
 
 -- Tabla de turnos
 CREATE TABLE turnos (
-    id SERIAL PRIMARY KEY,
-    usuario_id INTEGER NOT NULL,
-    odontologo_id INTEGER,
-    servicio_id INTEGER NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    odontologo_id INT,
+    servicio_id INT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    estado VARCHAR(20) DEFAULT 'reservado' CHECK (estado IN ('reservado', 'confirmado', 'en_curso', 'completado', 'cancelado', 'no_asistio')),
+    estado ENUM('reservado', 'confirmado', 'en_curso', 'completado', 'cancelado', 'no_asistio') DEFAULT 'reservado',
     observaciones TEXT,
     observaciones_medicas TEXT,
     precio DECIMAL(10,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     FOREIGN KEY (odontologo_id) REFERENCES odontologos(id) ON DELETE SET NULL,
     FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT,
-    UNIQUE (fecha, hora, odontologo_id)
+    UNIQUE KEY unique_turno (fecha, hora, odontologo_id)
 );
 
 -- Tabla de historial médico
 CREATE TABLE historial_medico (
-    id SERIAL PRIMARY KEY,
-    usuario_id INTEGER NOT NULL,
-    turno_id INTEGER,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    turno_id INT,
     diagnostico TEXT,
     tratamiento TEXT,
     medicamentos TEXT,
@@ -91,9 +95,9 @@ CREATE TABLE historial_medico (
 
 -- Tabla de horarios de atención
 CREATE TABLE horarios_atencion (
-    id SERIAL PRIMARY KEY,
-    odontologo_id INTEGER NOT NULL,
-    dia_semana VARCHAR(10) CHECK (dia_semana IN ('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo')),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    odontologo_id INT NOT NULL,
+    dia_semana ENUM('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'),
     hora_inicio TIME,
     hora_fin TIME,
     activo BOOLEAN DEFAULT TRUE,
@@ -102,12 +106,12 @@ CREATE TABLE horarios_atencion (
 
 -- Tabla de notificaciones
 CREATE TABLE notificaciones (
-    id SERIAL PRIMARY KEY,
-    usuario_id INTEGER NOT NULL,
-    tipo VARCHAR(20) DEFAULT 'sistema' CHECK (tipo IN ('nuevo_turno', 'turno_confirmado', 'turno_cancelado', 'turno_pospuesto', 'recordatorio', 'promocion', 'sistema')),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    tipo ENUM('nuevo_turno', 'turno_confirmado', 'turno_cancelado', 'turno_pospuesto', 'recordatorio', 'promocion', 'sistema') DEFAULT 'sistema',
     titulo VARCHAR(255) NOT NULL,
     mensaje TEXT NOT NULL,
-    turno_id INTEGER NULL,
+    turno_id INT NULL,
     leida BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -167,14 +171,14 @@ INSERT INTO usuarios (nombre, email, password, telefono, fecha_nacimiento, direc
 
 -- Insertar turnos de ejemplo
 INSERT INTO turnos (usuario_id, odontologo_id, servicio_id, fecha, hora, estado, observaciones) VALUES 
-(2, 1, 1, CURRENT_DATE, '09:00:00', 'reservado', 'Limpieza de rutina'),
-(3, 1, 2, CURRENT_DATE, '10:00:00', 'confirmado', 'Control general'),
-(4, 2, 3, CURRENT_DATE + INTERVAL '1 day', '14:00:00', 'reservado', 'Primera consulta ortodóntica'),
-(5, 1, 1, CURRENT_DATE + INTERVAL '1 day', '09:30:00', 'reservado', 'Limpieza de rutina'),
-(2, 3, 4, CURRENT_DATE + INTERVAL '2 days', '08:00:00', 'confirmado', 'Endodoncia molar superior'),
-(3, 1, 5, CURRENT_DATE + INTERVAL '2 days', '11:00:00', 'reservado', 'Dolor en muela del juicio'),
-(4, 2, 3, CURRENT_DATE + INTERVAL '3 days', '15:00:00', 'completado', 'Seguimiento ortodóntico'),
-(5, 1, 6, CURRENT_DATE + INTERVAL '3 days', '10:00:00', 'completado', 'Extracción realizada');
+(2, 1, 1, CURDATE(), '09:00:00', 'reservado', 'Limpieza de rutina'),
+(3, 1, 2, CURDATE(), '10:00:00', 'confirmado', 'Control general'),
+(4, 2, 3, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00:00', 'reservado', 'Primera consulta ortodóntica'),
+(5, 1, 1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:30:00', 'reservado', 'Limpieza de rutina'),
+(2, 3, 4, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '08:00:00', 'confirmado', 'Endodoncia molar superior'),
+(3, 1, 5, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '11:00:00', 'reservado', 'Dolor en muela del juicio'),
+(4, 2, 3, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '15:00:00', 'completado', 'Seguimiento ortodóntico'),
+(5, 1, 6, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '10:00:00', 'completado', 'Extracción realizada');
 
 -- Insertar notificaciones de ejemplo
 INSERT INTO notificaciones (usuario_id, tipo, titulo, mensaje, turno_id) VALUES 

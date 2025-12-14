@@ -207,7 +207,8 @@ const obtenerTodosUsuarios = async (req, res) => {
         const connection = await createConnection();
         
         const [usuarios] = await connection.execute(`
-            SELECT id, nombre, email, rol, created_at 
+            SELECT id, nombre, email, rol, created_at,
+                   CASE WHEN rol = 'admin' THEN true ELSE false END as es_admin
             FROM usuarios 
             ORDER BY created_at DESC
         `);
@@ -248,16 +249,33 @@ const eliminarCuenta = async (req, res) => {
         
         const connection = await createConnection();
         
-        // Verificar que el usuario existe y el email coincide
-        const [users] = await connection.execute('SELECT email FROM usuarios WHERE id = ?', [id]);
+        // Verificar que el usuario existe y obtener sus datos
+        const [users] = await connection.execute('SELECT email, rol FROM usuarios WHERE id = ?', [id]);
         if (users.length === 0) {
             connection.release();
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
         
-        if (users[0].email !== confirmEmail) {
+        const user = users[0];
+        
+        // Prevenir que los administradores se eliminen a sí mismos
+        if (user.rol === 'admin' && req.user && req.user.id == id) {
             connection.release();
-            return res.status(400).json({ error: 'Email de confirmación incorrecto' });
+            return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador' });
+        }
+        
+        // Verificar que solo admins pueden eliminar otros usuarios
+        if (req.user && req.user.rol === 'admin' && req.user.id != id) {
+            // Admin eliminando otro usuario - no necesita confirmación de email
+        } else if (req.user && req.user.id == id) {
+            // Usuario eliminando su propia cuenta - necesita confirmación
+            if (user.email !== confirmEmail) {
+                connection.release();
+                return res.status(400).json({ error: 'Email de confirmación incorrecto' });
+            }
+        } else {
+            connection.release();
+            return res.status(403).json({ error: 'No tienes permisos para eliminar este usuario' });
         }
         
         // Eliminar usuario (CASCADE eliminará turnos automáticamente)

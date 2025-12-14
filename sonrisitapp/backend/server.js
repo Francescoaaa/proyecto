@@ -5,15 +5,12 @@ const rateLimit = require('express-rate-limit');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const { sanitizeInput } = require('./middleware/auth');
-const { checkDatabaseConnection } = require('./middleware/database');
 require('dotenv').config();
 
 const usuariosRoutes = require('./routes/usuarios');
 const turnosRoutes = require('./routes/turnos');
 const serviciosRoutes = require('./routes/servicios');
-const testRoutes = require('./routes/test');
 const notificacionesRoutes = require('./routes/notificaciones');
-const healthRoutes = require('./routes/health');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -79,15 +76,13 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Ruta específica para login con rate limiting
-app.post('/login', loginLimiter, checkDatabaseConnection, require('./controllers/usuarioController').login);
+app.post('/login', loginLimiter, require('./controllers/usuarioController').login);
 
-// Rutas con verificación de base de datos
-app.use('/usuarios', checkDatabaseConnection, usuariosRoutes);
-app.use('/turnos', checkDatabaseConnection, turnosRoutes);
-app.use('/servicios', checkDatabaseConnection, serviciosRoutes);
-app.use('/notificaciones', checkDatabaseConnection, notificacionesRoutes);
-app.use('/health', healthRoutes);
-app.use('/test', testRoutes);
+// Rutas principales
+app.use('/usuarios', usuariosRoutes);
+app.use('/turnos', turnosRoutes);
+app.use('/servicios', serviciosRoutes);
+app.use('/notificaciones', notificacionesRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

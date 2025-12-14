@@ -1,6 +1,4 @@
 import React from 'react';
-import DatabaseTest from '../DatabaseTest';
-import NotificationTest from '../NotificationTest';
 
 const AdminDashboard = ({ stats, user }) => (
     <>
@@ -66,13 +64,7 @@ const AdminDashboard = ({ stats, user }) => (
             </div>
         </div>
         
-        <div className="mb-8">
-            <DatabaseTest />
-        </div>
-        
-        <div className="mb-8">
-            <NotificationTest user={user} />
-        </div>
+
     </>
 );
 

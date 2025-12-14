@@ -10,7 +10,7 @@ const crearNotificacion = async (datos) => {
             [datos.usuario_id, datos.tipo, datos.titulo, datos.mensaje, datos.turno_id || null]
         );
         
-        await connection.end();
+        connection.release();
         console.log('NOTIFICACION: Creada en BD:', result.insertId);
         return { id: result.insertId, ...datos };
     } catch (error) {
@@ -35,7 +35,7 @@ const obtenerNotificaciones = async (req, res) => {
             LIMIT 50
         `, [usuario_id]);
         
-        await connection.end();
+        connection.release();
         console.log('NOTIF: Encontradas', notificaciones.length, 'notificaciones');
         res.json(notificaciones);
     } catch (error) {
@@ -55,7 +55,7 @@ const marcarComoLeida = async (req, res) => {
             [id]
         );
         
-        await connection.end();
+        connection.release();
         res.json({ message: 'Notificación marcada como leída' });
     } catch (error) {
         console.error('Error al marcar notificación:', error);
@@ -76,7 +76,7 @@ const contarNoLeidas = async (req, res) => {
             [usuario_id]
         );
         
-        await connection.end();
+        connection.release();
         const count = result[0].count;
         console.log('NOTIF: Contador no leídas:', count);
         res.json({ count });
