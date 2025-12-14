@@ -167,7 +167,7 @@ router.delete('/:id', authenticateToken, cancelarTurno);
  *       200:
  *         description: Turno eliminado exitosamente
  */
-router.delete('/:id/eliminar', eliminarTurno);
+router.delete('/:id/eliminar', authenticateToken, requireAdmin, eliminarTurno);
 
 /**
  * @swagger

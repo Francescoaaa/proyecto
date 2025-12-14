@@ -150,7 +150,7 @@ router.get('/estadisticas', obtenerEstadisticas);
  *       200:
  *         description: Lista de usuarios obtenida exitosamente
  */
-router.get('/todos', obtenerTodosUsuarios);
+router.get('/todos', authenticateToken, requireAdmin, obtenerTodosUsuarios);
 
 /**
  * @swagger

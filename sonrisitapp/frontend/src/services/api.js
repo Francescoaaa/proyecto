@@ -135,7 +135,7 @@ const api = {
     listarTurnos: async () => {
         try {
             console.log('API: Obteniendo turnos desde MySQL...');
-            const response = await fetch(`${API_BASE_URL}/turnos/admin`, {
+            const response = await fetch(`${API_BASE_URL}/turnos/disponibles`, {
                 headers: getAuthHeaders()
             });
             
@@ -148,6 +148,26 @@ const api = {
             return data;
         } catch (error) {
             console.error('API: Error al obtener turnos:', error);
+            throw error;
+        }
+    },
+
+    listarTurnosAdmin: async () => {
+        try {
+            console.log('API: Obteniendo turnos admin desde MySQL...');
+            const response = await fetch(`${API_BASE_URL}/turnos/admin`, {
+                headers: getAuthHeaders()
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('API: Turnos admin obtenidos:', data.length);
+            return data;
+        } catch (error) {
+            console.error('API: Error al obtener turnos admin:', error);
             throw error;
         }
     },

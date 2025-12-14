@@ -31,8 +31,9 @@ app.use(helmet({
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por IP
-    message: { error: 'Demasiadas solicitudes. Intenta nuevamente más tarde.' }
+    max: 1000, // máximo 1000 requests por IP (más permisivo para desarrollo)
+    message: { error: 'Demasiadas solicitudes. Intenta nuevamente más tarde.' },
+    skip: (req) => req.path.startsWith('/notificaciones') // Excluir notificaciones del rate limit
 });
 
 const loginLimiter = rateLimit({
@@ -48,7 +49,9 @@ app.use(cors({
         : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 200
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeInput);

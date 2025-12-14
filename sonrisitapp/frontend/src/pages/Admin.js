@@ -44,8 +44,11 @@ const Admin = ({ user, setUser }) => {
                 setReloading(true);
             }
             
+            console.log('ADMIN: Cargando datos, usuario actual:', user);
+            console.log('ADMIN: Token en localStorage:', localStorage.getItem('token') ? 'Existe' : 'No existe');
+            
             const [turnosData, usuariosData] = await Promise.all([
-                api.listarTurnos(),
+                api.listarTurnosAdmin(),
                 api.obtenerUsuarios()
             ]);
             

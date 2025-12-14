@@ -31,6 +31,7 @@ const authenticateToken = (req, res, next) => {
         }
         
         console.log('AUTH_MIDDLEWARE: Token válido para usuario:', user.email, 'rol:', user.rol, 'id:', user.id);
+        console.log('AUTH_MIDDLEWARE: Datos completos del usuario:', JSON.stringify(user, null, 2));
         
         req.user = user;
         next();
@@ -39,9 +40,20 @@ const authenticateToken = (req, res, next) => {
 
 // Middleware para verificar rol de administrador
 const requireAdmin = (req, res, next) => {
+    console.log('REQUIRE_ADMIN: Verificando permisos para usuario:', req.user?.email, 'rol:', req.user?.rol);
+    console.log('REQUIRE_ADMIN: Objeto user completo:', JSON.stringify(req.user, null, 2));
+    
+    if (!req.user) {
+        console.log('REQUIRE_ADMIN: No hay usuario en req.user');
+        return res.status(403).json({ error: 'Usuario no autenticado' });
+    }
+    
     if (req.user.rol !== 'admin') {
+        console.log('REQUIRE_ADMIN: Acceso denegado - rol requerido: admin, rol actual:', req.user.rol);
         return res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de administrador' });
     }
+    
+    console.log('REQUIRE_ADMIN: Acceso permitido para admin');
     next();
 };
 
