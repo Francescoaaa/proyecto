@@ -242,6 +242,260 @@ Para soporte técnico o consultas:
 - GitHub Issues: [Crear Issue](https://github.com/Francescoaaa/proyecto/issues)
 - Email: tu-email@ejemplo.com
 
+## 💻 Códigos Más Importantes
+
+### 1. Autenticación JWT (middleware/auth.js)
+```javascript
+const jwt = require('jsonwebtoken');
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acceso requerido' });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Token inválido' });
+        req.user = user;
+        next();
+    });
+};
+```
+**¿Por qué es importante?** Protege todas las rutas sensibles del backend.
+
+### 2. Conexión a Base de Datos (config/database.js)
+```javascript
+const mysql = require('mysql2');
+
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+```
+**¿Por qué es importante?** Pool de conexiones para mejor rendimiento.
+
+### 3. API Service Frontend (services/api.js)
+```javascript
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://sonrisitapp-backend.onrender.com'
+    : 'http://localhost:3001';
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
+```
+**¿Por qué es importante?** Maneja la comunicación entre frontend y backend.
+
+### 4. Controlador de Turnos (controllers/turnoController.js)
+```javascript
+const crearTurno = async (req, res) => {
+    const { usuario_id, odontologo_id, servicio_id, fecha, hora } = req.body;
+    
+    try {
+        // Verificar disponibilidad
+        const [existing] = await pool.promise().execute(
+            'SELECT * FROM turnos WHERE fecha = ? AND hora = ? AND odontologo_id = ?',
+            [fecha, hora, odontologo_id]
+        );
+        
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'Horario no disponible' });
+        }
+        
+        // Crear turno
+        const [result] = await pool.promise().execute(
+            'INSERT INTO turnos (usuario_id, odontologo_id, servicio_id, fecha, hora) VALUES (?, ?, ?, ?, ?)',
+            [usuario_id, odontologo_id, servicio_id, fecha, hora]
+        );
+        
+        res.status(201).json({ id: result.insertId, message: 'Turno creado exitosamente' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al crear turno' });
+    }
+};
+```
+**¿Por qué es importante?** Lógica de negocio principal del sistema.
+
+### 5. Componente React Principal (App.js)
+```javascript
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
+function App() {
+    const [user, setUser] = useState(null);
+    
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+        if (token && userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+    
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login setUser={setUser} />} />
+                <Route path="/dashboard" element={<Dashboard user={user} />} />
+            </Routes>
+        </Router>
+    );
+}
+```
+**¿Por qué es importante?** Maneja el estado global y routing de la aplicación.
+
+## 🎯 Preguntas Frecuentes en Evaluación Oral
+
+### **Arquitectura y Diseño**
+
+**P: ¿Por qué elegiste una arquitectura cliente-servidor separada?**
+**R:** Separé frontend y backend para:
+- **Escalabilidad**: Cada parte puede escalar independientemente
+- **Mantenibilidad**: Equipos diferentes pueden trabajar en paralelo
+- **Flexibilidad**: El backend puede servir múltiples clientes (web, móvil)
+- **Deployment**: Se pueden desplegar en servidores diferentes
+
+**P: ¿Cómo manejas la seguridad en tu aplicación?**
+**R:** Implementé múltiples capas:
+- **JWT Tokens**: Para autenticación stateless
+- **bcrypt**: Para hash de passwords
+- **Middleware de autenticación**: Protege rutas sensibles
+- **Validación de entrada**: Previene inyección SQL
+- **CORS configurado**: Solo permite orígenes autorizados
+
+### **Base de Datos**
+
+**P: ¿Por qué usaste PostgreSQL en producción y MySQL en desarrollo?**
+**R:** 
+- **PostgreSQL**: Más robusto para producción, mejor manejo de concurrencia
+- **MySQL**: Más fácil de configurar localmente con XAMPP
+- **Compatibilidad**: Ambos son SQL estándar, fácil migración
+
+**P: Explica las relaciones en tu base de datos**
+**R:**
+- **usuarios → turnos**: Un usuario puede tener muchos turnos (1:N)
+- **odontologos → turnos**: Un odontólogo atiende muchos turnos (1:N)
+- **servicios → turnos**: Un servicio puede estar en muchos turnos (1:N)
+- **turnos → notificaciones**: Un turno puede generar varias notificaciones (1:N)
+
+### **Frontend (React)**
+
+**P: ¿Por qué elegiste React?**
+**R:**
+- **Component-based**: Reutilización de código
+- **Virtual DOM**: Mejor rendimiento
+- **Ecosystem**: Gran cantidad de librerías
+- **Hooks**: Manejo de estado más limpio
+- **Community**: Amplio soporte y documentación
+
+**P: ¿Cómo manejas el estado en React?**
+**R:**
+- **useState**: Para estado local de componentes
+- **useEffect**: Para efectos secundarios y lifecycle
+- **localStorage**: Para persistir autenticación
+- **Context API**: Para estado global (usuario logueado)
+
+### **Backend (Node.js)**
+
+**P: ¿Por qué Node.js y no otro lenguaje?**
+**R:**
+- **JavaScript**: Mismo lenguaje en frontend y backend
+- **Asíncrono**: Excelente para I/O intensivo (base de datos)
+- **NPM**: Gran ecosistema de paquetes
+- **Rapidez de desarrollo**: Prototipado rápido
+- **JSON nativo**: Perfecto para APIs REST
+
+**P: ¿Cómo manejas los errores en tu API?**
+**R:**
+```javascript
+try {
+    // Operación de base de datos
+} catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ 
+        error: 'Error interno del servidor',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+}
+```
+
+### **Deployment y DevOps**
+
+**P: ¿Cómo desplegaste tu aplicación?**
+**R:**
+- **Backend**: Render.com (gratuito, fácil configuración)
+- **Frontend**: Vercel/Netlify (optimizado para React)
+- **Base de datos**: PostgreSQL en Render
+- **Variables de entorno**: Configuradas en cada plataforma
+
+**P: ¿Qué problemas tuviste durante el desarrollo?**
+**R:**
+- **Permisos de react-scripts**: Solucionado con npm ci
+- **Variables de entorno**: Configuración diferente local vs producción
+- **CORS**: Configurar orígenes permitidos para producción
+- **Base de datos**: Migración de MySQL local a PostgreSQL producción
+
+### **Funcionalidades del Sistema**
+
+**P: ¿Cómo funciona el sistema de notificaciones?**
+**R:**
+- **Trigger**: Se crean automáticamente al crear/modificar turnos
+- **Tipos**: Confirmación, recordatorio, cancelación, promociones
+- **Estado**: Leída/no leída para UX
+- **Base de datos**: Tabla notificaciones con relación a turnos
+
+**P: ¿Cómo previenes conflictos de horarios?**
+**R:**
+```sql
+-- Constraint único en base de datos
+UNIQUE (fecha, hora, odontologo_id)
+
+-- Validación en backend antes de insertar
+SELECT * FROM turnos WHERE fecha = ? AND hora = ? AND odontologo_id = ?
+```
+
+**P: ¿Qué validaciones implementaste?**
+**R:**
+- **Frontend**: Validación de formularios en tiempo real
+- **Backend**: Validación de datos antes de insertar en BD
+- **Base de datos**: Constraints y foreign keys
+- **Autenticación**: Verificación de tokens en cada request
+
+### **Tecnologías y Decisiones**
+
+**P: ¿Por qué usaste Tailwind CSS?**
+**R:**
+- **Utility-first**: Clases predefinidas para desarrollo rápido
+- **Responsive**: Sistema de breakpoints integrado
+- **Customizable**: Fácil personalización de colores y espaciado
+- **Performance**: Solo incluye CSS que realmente usas
+
+**P: ¿Cómo organizaste los componentes en React?**
+**R:**
+- **Pages**: Componentes de página completa (Login, Dashboard)
+- **Components**: Componentes reutilizables (Button, Modal, Card)
+- **Services**: Lógica de API y comunicación con backend
+- **Hooks**: Custom hooks para lógica compartida (useToast)
+
+**P: ¿Qué patrón de diseño usaste en el backend?**
+**R:**
+- **MVC**: Separación en Models (DB), Views (JSON), Controllers
+- **Middleware**: Patrón de cadena para autenticación y validación
+- **Repository**: Abstracción de acceso a datos
+- **Singleton**: Pool de conexiones a base de datos
+
 ---
 
-⭐ **¡Dale una estrella al proyecto si te fue útil!** ⭐
+ 
