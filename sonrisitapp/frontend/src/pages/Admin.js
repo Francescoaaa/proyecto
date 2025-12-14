@@ -18,6 +18,7 @@ const Admin = ({ user, setUser }) => {
     const [turnoFilter, setTurnoFilter] = useState('todos');
     const [sortBy, setSortBy] = useState('fecha');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [filtroUsuario, setFiltroUsuario] = useState(null);
     const [modalTurno, setModalTurno] = useState(null);
     const [accionTurno, setAccionTurno] = useState('');
     const [justificacion, setJustificacion] = useState('');
@@ -25,6 +26,8 @@ const Admin = ({ user, setUser }) => {
     const [nuevaHora, setNuevaHora] = useState('');
     const [modalUsuario, setModalUsuario] = useState(null);
     const [confirmEmail, setConfirmEmail] = useState('');
+    const [modalEditarUsuario, setModalEditarUsuario] = useState(null);
+    const [datosEdicion, setDatosEdicion] = useState({ nombre: '', email: '', telefono: '', rol: '' });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -153,6 +156,35 @@ const Admin = ({ user, setUser }) => {
         setConfirmEmail('');
     };
 
+    const abrirModalEditarUsuario = (usuario) => {
+        setModalEditarUsuario(usuario);
+        setDatosEdicion({
+            nombre: usuario.nombre,
+            email: usuario.email,
+            telefono: usuario.telefono || '',
+            rol: usuario.rol
+        });
+    };
+
+    const cerrarModalEditarUsuario = () => {
+        setModalEditarUsuario(null);
+        setDatosEdicion({ nombre: '', email: '', telefono: '', rol: '' });
+    };
+
+    const guardarCambiosUsuario = async () => {
+        if (!modalEditarUsuario) return;
+        
+        try {
+            await api.actualizarUsuario(modalEditarUsuario.id, datosEdicion);
+            cerrarModalEditarUsuario();
+            setSuccessMessage('Usuario actualizado exitosamente');
+            setTimeout(() => setSuccessMessage(''), 3000);
+            await cargarDatos(true);
+        } catch (error) {
+            setError('Error al actualizar usuario: ' + error.message);
+        }
+    };
+
     const eliminarUsuario = async () => {
         console.log('Intentando eliminar usuario:', modalUsuario);
         console.log('Email confirmación:', confirmEmail);
@@ -165,23 +197,8 @@ const Admin = ({ user, setUser }) => {
         }
         
         try {
-            console.log('Enviando request DELETE...');
-            const response = await fetch(`http://localhost:3001/usuarios/${modalUsuario.id}/eliminar`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ confirmEmail })
-            });
-            
-            console.log('Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.log('Error data:', errorData);
-                throw new Error(errorData.error || 'Error al eliminar usuario');
-            }
+            console.log('Enviando request DELETE usando API...');
+            await api.eliminarCuenta(modalUsuario.id, confirmEmail);
             
             console.log('Usuario eliminado exitosamente');
             cerrarModalUsuario();
@@ -263,6 +280,10 @@ const Admin = ({ user, setUser }) => {
             filtered = filtered.filter(t => t.estado === turnoFilter);
         }
         
+        if (filtroUsuario) {
+            filtered = filtered.filter(t => t.usuario_id === filtroUsuario.id);
+        }
+        
         filtered.sort((a, b) => {
             let comparison = 0;
             switch (sortBy) {
@@ -285,7 +306,7 @@ const Admin = ({ user, setUser }) => {
         });
         
         return filtered;
-    }, [turnos, turnoFilter, sortBy, sortOrder]);
+    }, [turnos, turnoFilter, sortBy, sortOrder, filtroUsuario]);
 
     // Optimizar filtrado de usuarios con useMemo
     const filteredUsuarios = useMemo(() => {
@@ -320,14 +341,16 @@ const Admin = ({ user, setUser }) => {
     const formatDate = (fecha) => {
         if (!fecha) return 'N/A';
         try {
-            return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
+            const date = new Date(fecha);
+            if (isNaN(date.getTime())) return 'N/A';
+            return date.toLocaleDateString('es-ES', {
                 weekday: 'short',
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric'
             });
         } catch {
-            return fecha;
+            return 'N/A';
         }
     };
 
@@ -577,7 +600,11 @@ const Admin = ({ user, setUser }) => {
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-right">
                                                                     <div className="flex justify-end gap-1">
-                                                                        <button className="p-2 text-gray-500 hover:text-primary dark:hover:text-primary transition-all duration-200 transform hover:scale-110 hover:bg-primary/10 rounded-lg" title="Editar usuario">
+                                                                        <button 
+                                                                            onClick={() => abrirModalEditarUsuario(usuario)}
+                                                                            className="p-2 text-gray-500 hover:text-primary dark:hover:text-primary transition-all duration-200 transform hover:scale-110 hover:bg-primary/10 rounded-lg" 
+                                                                            title="Editar usuario"
+                                                                        >
                                                                             <span className="material-symbols-outlined text-sm">edit</span>
                                                                         </button>
                                                                         <button 
@@ -590,7 +617,14 @@ const Admin = ({ user, setUser }) => {
                                                                         >
                                                                             <span className="material-symbols-outlined text-sm">delete</span>
                                                                         </button>
-                                                                        <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 transition-all duration-200 transform hover:scale-110 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" title="Ver turnos">
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                setFiltroUsuario(usuario);
+                                                                                setActiveSection('turnos');
+                                                                            }}
+                                                                            className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 transition-all duration-200 transform hover:scale-110 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg" 
+                                                                            title="Ver turnos"
+                                                                        >
                                                                             <span className="material-symbols-outlined text-sm">calendar_month</span>
                                                                         </button>
                                                                     </div>
@@ -609,7 +643,19 @@ const Admin = ({ user, setUser }) => {
                         {activeSection === 'turnos' && (
                             <>
                                 <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-                                    <h2 className="text-2xl font-bold leading-tight tracking-[-0.015em] text-gray-900 dark:text-white">Gestión de Turnos</h2>
+                                    <div>
+                                        <h2 className="text-2xl font-bold leading-tight tracking-[-0.015em] text-gray-900 dark:text-white">
+                                            {filtroUsuario ? `Turnos de ${filtroUsuario.nombre}` : 'Gestión de Turnos'}
+                                        </h2>
+                                        {filtroUsuario && (
+                                            <button 
+                                                onClick={() => setFiltroUsuario(null)}
+                                                className="mt-1 text-sm text-primary hover:text-primary/80 font-medium"
+                                            >
+                                                ← Volver a todos los turnos
+                                            </button>
+                                        )}
+                                    </div>
                                     <button 
                                         onClick={() => cargarDatos(true)}
                                         disabled={reloading}
@@ -671,19 +717,18 @@ const Admin = ({ user, setUser }) => {
                                         <table className="w-full text-sm text-left">
                                             <thead className="bg-gray-50 dark:bg-gray-900">
                                                 <tr>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hora</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Servicio</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-                                                    <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paciente</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha y Hora</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Servicio</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                                 {turnosFiltrados.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                                             <div className="flex flex-col items-center gap-2">
                                                                 <span className="material-symbols-outlined text-4xl">event_busy</span>
                                                                 <p>{turnoFilter === 'todos' ? 'No hay turnos registrados' : `No hay turnos ${turnoFilter}`}</p>
@@ -699,50 +744,37 @@ const Admin = ({ user, setUser }) => {
                                                 ) : (
                                                     turnosFiltrados.map((turno, index) => {
                                                         const turnoId = turno.id && !isNaN(turno.id) ? turno.id : (index + 1);
-                                                        const nombreUsuario = usuariosMap[turno.usuario_id] || `Usuario ${turno.usuario_id}`;
+                                                        const nombreUsuario = turno.usuario_nombre || usuariosMap[turno.usuario_id] || `Usuario ${turno.usuario_id}`;
+                                                        
+
                                                         
                                                         return (
                                                             <tr key={turno.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200">
-                                                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                                                    <span className="inline-flex items-center gap-1">
-                                                                        <span className="material-symbols-outlined text-xs text-gray-400">tag</span>
-                                                                        #{turnoId}
-                                                                    </span>
+                                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">#{turnoId}</span>
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                <td className="px-4 py-3 whitespace-nowrap">
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="bg-primary/20 rounded-full size-8 flex items-center justify-center text-primary font-bold text-xs">
                                                                             {nombreUsuario.charAt(0).toUpperCase()}
                                                                         </div>
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-gray-900 dark:text-white font-medium">
-                                                                                {nombreUsuario}
-                                                                            </span>
-                                                                            {turno.usuario_id && (
-                                                                                <span className="text-xs text-gray-500">ID: {turno.usuario_id}</span>
-                                                                            )}
-                                                                        </div>
+                                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {nombreUsuario}
+                                                                        </span>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                                                                    <div className="flex items-center gap-1">
-                                                                        <span className="material-symbols-outlined text-xs text-gray-400">calendar_today</span>
-                                                                        {formatDate(turno.fecha)}
+                                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                                    <div className="text-sm text-gray-900 dark:text-white">
+                                                                        <div className="font-medium">{formatDate(turno.fecha)}</div>
+                                                                        <div className="text-gray-500 font-mono text-xs">{formatTime(turno.hora)}</div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
-                                                                    <div className="flex items-center gap-1 font-mono">
-                                                                        <span className="material-symbols-outlined text-xs text-gray-400">schedule</span>
-                                                                        {formatTime(turno.hora)}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-md">
-                                                                        <span className="material-symbols-outlined text-xs">medical_services</span>
+                                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-md">
                                                                         {turno.servicio || 'No especificado'}
                                                                     </span>
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                <td className="px-4 py-3 whitespace-nowrap">
                                                                     <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${getEstadoColor(turno.estado)}`}>
                                                                         <span className="material-symbols-outlined text-xs">
                                                                             {getEstadoIcon(turno.estado)}
@@ -921,70 +953,152 @@ const Admin = ({ user, setUser }) => {
                                     </div>
                                 )}
                                 
-                                {/* Modal para eliminar usuario */}
-                                {modalUsuario && (
-                                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-md mx-4">
-                                            <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">
-                                                Eliminar Usuario
-                                            </h3>
-                                            
-                                            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                                                <p className="text-sm text-red-700 dark:text-red-300">
-                                                    <strong>¡Atención!</strong> Esta acción eliminará permanentemente:
-                                                </p>
-                                                <ul className="text-sm text-red-600 dark:text-red-400 mt-2 ml-4 list-disc">
-                                                    <li>El usuario y todos sus datos</li>
-                                                    <li>Todos sus turnos (pasados y futuros)</li>
-                                                    <li>Su historial médico</li>
-                                                    <li>Sus notificaciones</li>
-                                                </ul>
-                                            </div>
-                                            
-                                            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    <strong>Usuario:</strong> {modalUsuario.nombre}<br/>
-                                                    <strong>Email:</strong> {modalUsuario.email}<br/>
-                                                    <strong>Rol:</strong> {modalUsuario.rol === 'admin' ? 'Administrador' : 'Paciente'}
-                                                </p>
-                                            </div>
-                                            
-                                            <div className="mb-4">
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                    Para confirmar, escriba el email del usuario:
-                                                </label>
-                                                <input 
-                                                    type="email"
-                                                    value={confirmEmail}
-                                                    onChange={(e) => setConfirmEmail(e.target.value)}
-                                                    placeholder={modalUsuario.email}
-                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-800 dark:text-white"
-                                                />
-                                            </div>
-                                            
-                                            <div className="flex gap-3 justify-end">
-                                                <button 
-                                                    onClick={cerrarModalUsuario}
-                                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                                <button 
-                                                    onClick={eliminarUsuario}
-                                                    disabled={confirmEmail !== modalUsuario.email}
-                                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Eliminar Usuario
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+
                             </>
                         )}
                     </div>
                 </main>
             </div>
+            
+            {/* Modal para editar usuario */}
+            {modalEditarUsuario && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                            Editar Usuario
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Nombre
+                                </label>
+                                <input 
+                                    type="text"
+                                    value={datosEdicion.nombre}
+                                    onChange={(e) => setDatosEdicion({...datosEdicion, nombre: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Email
+                                </label>
+                                <input 
+                                    type="email"
+                                    value={datosEdicion.email}
+                                    onChange={(e) => setDatosEdicion({...datosEdicion, email: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Teléfono
+                                </label>
+                                <input 
+                                    type="tel"
+                                    value={datosEdicion.telefono}
+                                    onChange={(e) => setDatosEdicion({...datosEdicion, telefono: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Rol
+                                </label>
+                                <select 
+                                    value={datosEdicion.rol}
+                                    onChange={(e) => setDatosEdicion({...datosEdicion, rol: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+                                >
+                                    <option value="usuario">Paciente</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="odontologo">Odontólogo</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3 justify-end mt-6">
+                            <button 
+                                onClick={cerrarModalEditarUsuario}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={guardarCambiosUsuario}
+                                disabled={!datosEdicion.nombre || !datosEdicion.email}
+                                className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Modal para eliminar usuario - FUERA de las secciones */}
+            {modalUsuario && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">
+                            Eliminar Usuario
+                        </h3>
+                        
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                            <p className="text-sm text-red-700 dark:text-red-300">
+                                <strong>¡Atención!</strong> Esta acción eliminará permanentemente:
+                            </p>
+                            <ul className="text-sm text-red-600 dark:text-red-400 mt-2 ml-4 list-disc">
+                                <li>El usuario y todos sus datos</li>
+                                <li>Todos sus turnos (pasados y futuros)</li>
+                                <li>Su historial médico</li>
+                                <li>Sus notificaciones</li>
+                            </ul>
+                        </div>
+                        
+                        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <strong>Usuario:</strong> {modalUsuario.nombre}<br/>
+                                <strong>Email:</strong> {modalUsuario.email}<br/>
+                                <strong>Rol:</strong> {modalUsuario.rol === 'admin' ? 'Administrador' : 'Paciente'}
+                            </p>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Para confirmar, escriba el email del usuario:
+                            </label>
+                            <input 
+                                type="email"
+                                value={confirmEmail}
+                                onChange={(e) => setConfirmEmail(e.target.value)}
+                                placeholder={modalUsuario.email}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 dark:bg-gray-800 dark:text-white"
+                            />
+                        </div>
+                        
+                        <div className="flex gap-3 justify-end">
+                            <button 
+                                onClick={cerrarModalUsuario}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={eliminarUsuario}
+                                disabled={confirmEmail !== modalUsuario.email}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Eliminar Usuario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

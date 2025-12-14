@@ -12,11 +12,17 @@ const listarTurnos = async (req, res) => {
         try {
             if (req.user?.rol === 'admin') {
                 const [turnos] = await connection.execute(`
-                    SELECT t.*, u.nombre as usuario_nombre, s.nombre as servicio
+                    SELECT t.id, t.usuario_id, t.odontologo_id, t.servicio_id, 
+                           t.fecha, t.hora, t.estado, t.observaciones, t.precio,
+                           t.created_at, t.updated_at,
+                           u.nombre as usuario_nombre, u.email as usuario_email,
+                           s.nombre as servicio, s.duracion_minutos, s.precio as servicio_precio,
+                           o.nombre as odontologo_nombre
                     FROM turnos t 
                     LEFT JOIN usuarios u ON t.usuario_id = u.id 
                     LEFT JOIN servicios s ON t.servicio_id = s.id
-                    ORDER BY t.fecha, t.hora
+                    LEFT JOIN odontologos o ON t.odontologo_id = o.id
+                    ORDER BY t.id ASC
                 `);
                 console.log('TURNOS_BACKEND: Turnos desde BD (admin):', turnos.length);
                 return res.json(turnos || []);

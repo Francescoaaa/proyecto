@@ -2,12 +2,35 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
     ? 'https://sonrisitapp-backend.onrender.com'
     : 'http://localhost:3001';
 
+// Función para verificar si el token está próximo a expirar
+const isTokenExpiringSoon = (token) => {
+    if (!token) return true;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const now = Math.floor(Date.now() / 1000);
+        const timeUntilExpiry = payload.exp - now;
+        
+        // Si quedan menos de 5 minutos (300 segundos)
+        return timeUntilExpiry < 300;
+    } catch (error) {
+        console.error('Error al verificar expiración del token:', error);
+        return true;
+    }
+};
+
 // Función para obtener headers con token
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     console.log('API: Token en localStorage:', token ? 'Existe' : 'No existe');
+    
     if (token) {
         console.log('API: Token (primeros 20 chars):', token.substring(0, 20) + '...');
+        
+        // Verificar si el token está próximo a expirar
+        if (isTokenExpiringSoon(token)) {
+            console.warn('API: Token próximo a expirar o expirado');
+        }
     }
     
     const headers = {
@@ -20,14 +43,28 @@ const getAuthHeaders = () => {
 };
 
 // Función para manejar errores de autenticación
-const handleAuthError = (response) => {
+const handleAuthError = async (response) => {
     console.log('Verificando auth error:', response.status);
     if (response.status === 401 || response.status === 403) {
-        console.log('Error de autenticación detectado, limpiando localStorage');
+        console.log('Token expirado o inválido, limpiando localStorage');
+        
+        // Intentar obtener más información del error
+        try {
+            const errorData = await response.json();
+            if (errorData.expired) {
+                console.log('Token expirado detectado');
+            }
+        } catch (e) {
+            // Ignorar errores al parsear JSON
+        }
+        
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // No redirigir automáticamente desde aquí
-        // window.location.href = '/login';
+        
+        // Redirigir al login solo si no estamos ya en login
+        if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+        }
     }
 };
 
@@ -98,7 +135,7 @@ const api = {
     listarTurnos: async () => {
         try {
             console.log('API: Obteniendo turnos desde MySQL...');
-            const response = await fetch(`${API_BASE_URL}/turnos`, {
+            const response = await fetch(`${API_BASE_URL}/turnos/admin`, {
                 headers: getAuthHeaders()
             });
             
@@ -193,13 +230,29 @@ const api = {
 
     // Usuario
     actualizarUsuario: async (id, userData) => {
-        const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(userData)
-        });
-        handleAuthError(response);
-        return response.json();
+        try {
+            console.log('API: Actualizando usuario ID:', id, 'Datos:', userData);
+            const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(userData)
+            });
+            
+            console.log('API: Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.log('API: Error data:', errorData);
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('API: Usuario actualizado exitosamente:', result);
+            return result;
+        } catch (error) {
+            console.error('API: Error al actualizar usuario:', error);
+            throw error;
+        }
     },
 
     recuperarPassword: async (email) => {
@@ -238,15 +291,22 @@ const api = {
     // Métodos de notificaciones
     obtenerNotificaciones: async (userId) => {
         try {
+            console.log('API: Obteniendo notificaciones para usuario:', userId);
             const response = await fetch(`${API_BASE_URL}/notificaciones/usuario/${userId}`, {
                 headers: getAuthHeaders()
             });
             
+            console.log('API: Response status notificaciones:', response.status);
+            
             if (!response.ok) {
-                throw new Error(`Error ${response.status}`);
+                const errorText = await response.text();
+                console.error('API: Error response notificaciones:', errorText);
+                throw new Error(`Error ${response.status}: ${errorText}`);
             }
             
-            return await response.json();
+            const data = await response.json();
+            console.log('API: Notificaciones obtenidas:', data.length);
+            return data;
         } catch (error) {
             console.error('API: Error al obtener notificaciones:', error);
             return [];
@@ -301,13 +361,29 @@ const api = {
 
     // Eliminar cuenta
     eliminarCuenta: async (userId, confirmEmail) => {
-        const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/eliminar`, {
-            method: 'DELETE',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ confirmEmail })
-        });
-        handleAuthError(response);
-        return response.json();
+        try {
+            console.log('API: Eliminando usuario ID:', userId, 'Email:', confirmEmail);
+            const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/eliminar`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ confirmEmail })
+            });
+            
+            console.log('API: Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.log('API: Error data:', errorData);
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('API: Usuario eliminado exitosamente:', result);
+            return result;
+        } catch (error) {
+            console.error('API: Error al eliminar cuenta:', error);
+            throw error;
+        }
     }
 };
 

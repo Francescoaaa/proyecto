@@ -182,6 +182,9 @@ INSERT INTO turnos (usuario_id, odontologo_id, servicio_id, fecha, hora, estado,
 
 -- Insertar notificaciones de ejemplo
 INSERT INTO notificaciones (usuario_id, tipo, titulo, mensaje, turno_id) VALUES 
+(1, 'sistema', 'Bienvenido Admin', 'Panel de administración configurado correctamente', NULL),
+(1, 'nuevo_turno', 'Nuevo Turno Reservado', 'Ana García ha reservado un turno para Limpieza dental', 1),
+(1, 'nuevo_turno', 'Nuevo Turno Reservado', 'Luis Martínez ha reservado un turno para Control general', 2),
 (2, 'recordatorio', 'Recordatorio de Turno', 'Tienes un turno mañana a las 09:00 para Limpieza dental', 1),
 (3, 'turno_confirmado', 'Turno Confirmado', 'Tu turno ha sido confirmado para hoy a las 10:00', 2),
 (4, 'nuevo_turno', 'Nuevo Turno Reservado', 'Has reservado un turno para Ortodoncia', 3),

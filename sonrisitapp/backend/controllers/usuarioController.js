@@ -63,8 +63,19 @@ const login = async (req, res) => {
                 return res.status(401).json({ error: 'Credenciales inválidas' });
             }
 
+            // Verificar que JWT_SECRET existe
+            if (!process.env.JWT_SECRET) {
+                console.error('JWT_SECRET no está definido en .env');
+                return res.status(500).json({ error: 'Error de configuración del servidor' });
+            }
+
             const token = jwt.sign(
-                { id: user.id, email: user.email, rol: user.rol },
+                { 
+                    id: user.id, 
+                    email: user.email, 
+                    rol: user.rol,
+                    iat: Math.floor(Date.now() / 1000)
+                },
                 process.env.JWT_SECRET,
                 { expiresIn: '24h' }
             );
@@ -87,7 +98,9 @@ const login = async (req, res) => {
 const actualizarUsuario = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, email, telefono, currentPassword, newPassword } = req.body;
+        const { nombre, email, telefono, rol, currentPassword, newPassword } = req.body;
+        
+        console.log('ACTUALIZAR_USUARIO: ID:', id, 'Datos:', { nombre, email, telefono, rol });
         
         const connection = await createConnection();
         
@@ -99,6 +112,15 @@ const actualizarUsuario = async (req, res) => {
         }
         
         const user = users[0];
+        
+        // Verificar email único (si se está cambiando)
+        if (email && email !== user.email) {
+            const [existingEmail] = await connection.execute('SELECT id FROM usuarios WHERE email = ? AND id != ?', [email, id]);
+            if (existingEmail.length > 0) {
+                connection.release();
+                return res.status(400).json({ error: 'El email ya está en uso por otro usuario' });
+            }
+        }
         
         // Si se quiere cambiar la contraseña, verificar la actual
         if (newPassword) {
@@ -115,21 +137,22 @@ const actualizarUsuario = async (req, res) => {
             
             const hashedNewPassword = await bcrypt.hash(newPassword, 10);
             await connection.execute(
-                'UPDATE usuarios SET nombre = ?, email = ?, telefono = ?, password = ? WHERE id = ?',
-                [nombre, email, telefono, hashedNewPassword, id]
+                'UPDATE usuarios SET nombre = ?, email = ?, telefono = ?, rol = ?, password = ? WHERE id = ?',
+                [nombre, email, telefono, rol, hashedNewPassword, id]
             );
         } else {
-            // Solo actualizar datos básicos
+            // Actualizar datos básicos incluyendo rol
             await connection.execute(
-                'UPDATE usuarios SET nombre = ?, email = ?, telefono = ? WHERE id = ?',
-                [nombre, email, telefono, id]
+                'UPDATE usuarios SET nombre = ?, email = ?, telefono = ?, rol = ? WHERE id = ?',
+                [nombre, email, telefono, rol, id]
             );
         }
         
         connection.release();
+        console.log('ACTUALIZAR_USUARIO: Usuario actualizado exitosamente');
         res.json({ message: 'Usuario actualizado exitosamente' });
     } catch (error) {
-        console.error(error);
+        console.error('ACTUALIZAR_USUARIO: Error:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
@@ -247,6 +270,9 @@ const eliminarCuenta = async (req, res) => {
         const { id } = req.params;
         const { confirmEmail } = req.body;
         
+        console.log('ELIMINAR_USUARIO: ID:', id, 'Email confirmación:', confirmEmail);
+        console.log('ELIMINAR_USUARIO: Usuario autenticado:', req.user);
+        
         const connection = await createConnection();
         
         // Verificar que el usuario existe y obtener sus datos
@@ -257,6 +283,7 @@ const eliminarCuenta = async (req, res) => {
         }
         
         const user = users[0];
+        console.log('ELIMINAR_USUARIO: Usuario a eliminar:', user);
         
         // Prevenir que los administradores se eliminen a sí mismos
         if (user.rol === 'admin' && req.user && req.user.id == id) {
@@ -264,11 +291,13 @@ const eliminarCuenta = async (req, res) => {
             return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador' });
         }
         
-        // Verificar que solo admins pueden eliminar otros usuarios
-        if (req.user && req.user.rol === 'admin' && req.user.id != id) {
-            // Admin eliminando otro usuario - no necesita confirmación de email
+        // Verificar permisos
+        if (req.user && req.user.rol === 'admin') {
+            // Admin puede eliminar cualquier usuario (excepto a sí mismo)
+            console.log('ELIMINAR_USUARIO: Admin eliminando usuario');
         } else if (req.user && req.user.id == id) {
             // Usuario eliminando su propia cuenta - necesita confirmación
+            console.log('ELIMINAR_USUARIO: Usuario eliminando su propia cuenta');
             if (user.email !== confirmEmail) {
                 connection.release();
                 return res.status(400).json({ error: 'Email de confirmación incorrecto' });
@@ -279,12 +308,19 @@ const eliminarCuenta = async (req, res) => {
         }
         
         // Eliminar usuario (CASCADE eliminará turnos automáticamente)
-        await connection.execute('DELETE FROM usuarios WHERE id = ?', [id]);
+        console.log('ELIMINAR_USUARIO: Ejecutando DELETE...');
+        const [result] = await connection.execute('DELETE FROM usuarios WHERE id = ?', [id]);
+        console.log('ELIMINAR_USUARIO: Resultado:', result);
         
         connection.release();
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado o ya eliminado' });
+        }
+        
         res.json({ message: 'Cuenta eliminada exitosamente' });
     } catch (error) {
-        console.error(error);
+        console.error('ELIMINAR_USUARIO: Error:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 };

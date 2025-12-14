@@ -15,10 +15,19 @@ const authenticateToken = (req, res, next) => {
         return res.status(401).json({ error: 'Token de acceso requerido' });
     }
 
+    // Verificar que JWT_SECRET existe
+    if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET no está definido');
+        return res.status(500).json({ error: 'Error de configuración del servidor' });
+    }
+
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             console.log('AUTH_MIDDLEWARE: Error al verificar token:', err.message);
-            return res.status(403).json({ error: 'Token inválido o expirado' });
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expirado', expired: true });
+            }
+            return res.status(403).json({ error: 'Token inválido' });
         }
         
         console.log('AUTH_MIDDLEWARE: Token válido para usuario:', user.email, 'rol:', user.rol, 'id:', user.id);
