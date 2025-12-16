@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';

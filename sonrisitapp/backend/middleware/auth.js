@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 const jwt = require('jsonwebtoken');
 
 // Middleware de autenticación JWT

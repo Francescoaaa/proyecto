@@ -1,4 +1,5 @@
 # 🦷 SonrisitApp - Sistema de Gestión de Turnos Odontológicos
+<!-- Autor: Francesco - https://github.com/Francescoaaa -->
 
 Sistema web completo para la gestión de turnos en consultorios odontológicos, desarrollado con React y Node.js.
 

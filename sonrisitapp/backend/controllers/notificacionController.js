@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 const { createConnection } = require('../config/database');
 
 // Crear notificación

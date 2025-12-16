@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 import { useState } from 'react';
 
 export const useToast = () => {

@@ -1,3 +1,4 @@
+-- Autor: Francesco - https://github.com/Francescoaaa
 -- =====================================================
 -- BASE DE DATOS MYSQL - SONRISITAPP
 -- =====================================================

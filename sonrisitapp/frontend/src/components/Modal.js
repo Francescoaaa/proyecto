@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 import React, { useEffect } from 'react';
 
 const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {

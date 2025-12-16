@@ -1,4 +1,5 @@
 # 📚 GUÍA DE ESTUDIO - SonrisitApp
+<!-- Autor: Francesco - https://github.com/Francescoaaa -->
 
 ## 🎯 CONCEPTOS BÁSICOS PARA MEMORIZAR
 

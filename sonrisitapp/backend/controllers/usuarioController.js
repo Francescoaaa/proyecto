@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createConnection } = require('../config/database');

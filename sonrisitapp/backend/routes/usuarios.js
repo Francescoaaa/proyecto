@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 const express = require('express');
 const router = express.Router();
 const { crearUsuario, login, actualizarUsuario, recuperarPassword, obtenerEstadisticas, obtenerTodosUsuarios, actualizarPreferenciasNotificaciones, eliminarCuenta } = require('../controllers/usuarioController');

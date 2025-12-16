@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 const express = require('express');
 const { obtenerNotificaciones, marcarComoLeida, contarNoLeidas } = require('../controllers/notificacionController');
 const { authenticateToken } = require('../middleware/auth');

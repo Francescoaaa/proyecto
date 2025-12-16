@@ -1,3 +1,4 @@
+// Autor: Francesco - https://github.com/Francescoaaa
 import React from 'react';
 
 const Alert = ({ type = 'info', message, onClose, className = '' }) => {
