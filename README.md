@@ -242,19 +242,318 @@ Para soporte técnico o consultas:
 - GitHub Issues: [Crear Issue](https://github.com/Francescoaaa/proyecto/issues)
 - Email: tu-email@ejemplo.com
 
-## 💻 Códigos Más Importantes
+## 📚 Conceptos Técnicos Fundamentales
 
-### 1. Autenticación JWT (middleware/auth.js)
+### ¿Qué es React?
+**React** es una librería de JavaScript para construir interfaces de usuario (UI).
+
+**Características principales:**
+- **Componentes**: Divide la UI en piezas reutilizables
+- **Virtual DOM**: Actualiza solo lo que cambió, no toda la página
+- **JSX**: Permite escribir HTML dentro de JavaScript
+- **Hooks**: useState, useEffect para manejar estado y efectos
+- **Unidireccional**: Los datos fluyen de padre a hijo
+
+**Ejemplo:**
 ```javascript
-const jwt = require('jsonwebtoken');
-
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+function MiComponente({ nombre }) {
+    const [contador, setContador] = useState(0);
     
-    if (!token) {
-        return res.status(401).json({ error: 'Token de acceso requerido' });
+    return (
+        <div>
+            <h1>Hola {nombre}</h1>
+            <p>Contador: {contador}</p>
+            <button onClick={() => setContador(contador + 1)}>
+                Incrementar
+            </button>
+        </div>
+    );
+}
+```
+
+### ¿Qué es Node.js?
+**Node.js** es un entorno de ejecución que permite usar JavaScript en el servidor.
+
+**Características principales:**
+- **JavaScript en el backend**: Mismo lenguaje que el frontend
+- **Asíncrono**: Maneja múltiples requests sin bloquear
+- **NPM**: Gestor de paquetes con millones de librerías
+- **Event-driven**: Basado en eventos y callbacks
+- **Cross-platform**: Funciona en Windows, Mac, Linux
+
+**Ventajas:**
+- Un solo lenguaje para todo el proyecto
+- Excelente para APIs REST
+- Gran comunidad y ecosistema
+- Ideal para aplicaciones en tiempo real
+
+### ¿Qué es Vite?
+**Vite** es una herramienta de desarrollo que hace el proceso más rápido.
+
+**Características:**
+- **Hot Module Replacement (HMR)**: Cambios instantáneos sin recargar
+- **Build rápido**: Usa esbuild, mucho más rápido que Webpack
+- **ES Modules**: Aprovecha módulos nativos del navegador
+- **Configuración mínima**: Funciona out-of-the-box
+
+**Comparación:**
+- **Create React App**: 30-60 segundos para iniciar
+- **Vite**: 1-3 segundos para iniciar
+
+### ¿Qué es Nodemon?
+**Nodemon** es una herramienta que reinicia automáticamente el servidor cuando detecta cambios.
+
+**Sin Nodemon:**
+```bash
+# Cada vez que cambias código:
+node server.js
+# Ctrl+C para parar
+# node server.js para reiniciar
+```
+
+**Con Nodemon:**
+```bash
+nodemon server.js
+# Se reinicia automáticamente al guardar cambios
+```
+
+**Configuración en package.json:**
+```json
+{
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  }
+}
+```
+
+### ¿Qué es una API?
+**API (Application Programming Interface)** es un conjunto de reglas que permite que diferentes aplicaciones se comuniquen.
+
+**Tipos de API:**
+- **REST API**: Usa HTTP (GET, POST, PUT, DELETE)
+- **GraphQL**: Consultas más flexibles
+- **WebSocket**: Comunicación en tiempo real
+
+**Ejemplo REST API:**
+```javascript
+// GET /usuarios - Obtener todos los usuarios
+// POST /usuarios - Crear nuevo usuario
+// PUT /usuarios/123 - Actualizar usuario 123
+// DELETE /usuarios/123 - Eliminar usuario 123
+```
+
+**Estructura de respuesta:**
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "nombre": "Juan Pérez",
+    "email": "juan@email.com"
+  },
+  "message": "Usuario creado exitosamente"
+}
+```
+
+### ¿Qué consume una API?
+**Clientes** que necesitan datos o funcionalidades:
+
+**Frontend (React, Vue, Angular):**
+```javascript
+// Consumir API desde React
+const obtenerUsuarios = async () => {
+    const response = await fetch('/api/usuarios');
+    const usuarios = await response.json();
+    setUsuarios(usuarios);
+};
+```
+
+**Aplicaciones móviles:**
+- React Native
+- Flutter
+- Apps nativas (iOS, Android)
+
+**Otros servicios:**
+- Microservicios
+- Sistemas de terceros
+- Integraciones (Zapier, webhooks)
+
+### ¿Qué es Express?
+**Express** es un framework web para Node.js que simplifica la creación de APIs.
+
+**Sin Express (Node.js puro):**
+```javascript
+const http = require('http');
+const url = require('url');
+
+const server = http.createServer((req, res) => {
+    const parsedUrl = url.parse(req.url, true);
+    
+    if (parsedUrl.pathname === '/usuarios' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ usuarios: [] }));
+    } else {
+        res.writeHead(404);
+        res.end('Not Found');
     }
+});
+```
+
+**Con Express:**
+```javascript
+const express = require('express');
+const app = express();
+
+app.get('/usuarios', (req, res) => {
+    res.json({ usuarios: [] });
+});
+
+app.listen(3001);
+```
+
+### ¿Para qué sirve Express?
+**Funcionalidades principales:**
+
+**1. Routing (Rutas):**
+```javascript
+app.get('/usuarios', obtenerUsuarios);     // GET
+app.post('/usuarios', crearUsuario);       // POST
+app.put('/usuarios/:id', actualizarUsuario); // PUT
+app.delete('/usuarios/:id', eliminarUsuario); // DELETE
+```
+
+**2. Middleware:**
+```javascript
+// Middleware de autenticación
+app.use('/admin', authenticateToken);
+
+// Middleware de logging
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
+```
+
+**3. Manejo de errores:**
+```javascript
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Error interno del servidor' });
+});
+```
+
+### ¿Qué es MVC?
+**MVC (Model-View-Controller)** es un patrón de arquitectura que separa la aplicación en 3 capas:
+
+**Model (Modelo):**
+- Maneja los datos y la lógica de negocio
+- Interactúa con la base de datos
+- Valida información
+
+```javascript
+// models/Usuario.js
+class Usuario {
+    static async crear(datos) {
+        const [result] = await db.execute(
+            'INSERT INTO usuarios (nombre, email) VALUES (?, ?)',
+            [datos.nombre, datos.email]
+        );
+        return result.insertId;
+    }
+}
+```
+
+**View (Vista):**
+- Presenta los datos al usuario
+- En APIs REST, son las respuestas JSON
+- En web tradicional, son las páginas HTML
+
+```javascript
+// La "vista" en una API REST
+res.json({
+    status: 'success',
+    data: usuarios,
+    total: usuarios.length
+});
+```
+
+**Controller (Controlador):**
+- Recibe requests del usuario
+- Coordina entre Model y View
+- Contiene la lógica de la aplicación
+
+```javascript
+// controllers/usuarioController.js
+const obtenerUsuarios = async (req, res) => {
+    try {
+        const usuarios = await Usuario.obtenerTodos();
+        res.json({ usuarios });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+```
+
+**Ventajas del MVC:**
+- **Separación de responsabilidades**
+- **Código más organizado y mantenible**
+- **Facilita el trabajo en equipo**
+- **Reutilización de componentes**
+
+### ¿Qué es una API Key?
+**API Key** es una clave única que identifica y autentica a quien usa una API.
+
+**Características:**
+- **Identificación**: Saber quién hace el request
+- **Autenticación**: Verificar que tiene permisos
+- **Rate Limiting**: Controlar cuántos requests puede hacer
+- **Tracking**: Monitorear uso y estadísticas
+
+**Tipos de API Keys:**
+
+**1. API Key simple:**
+```javascript
+// En el header
+Authorization: Bearer abc123def456
+
+// En query parameter
+GET /api/usuarios?api_key=abc123def456
+```
+
+**2. JWT Token (como en nuestro proyecto):**
+```javascript
+// Más seguro, contiene información del usuario
+const token = jwt.sign(
+    { id: usuario.id, email: usuario.email, rol: usuario.rol },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+);
+```
+
+**3. OAuth (Google, Facebook, etc.):**
+```javascript
+// Para integrar con servicios externos
+const googleAuth = {
+    client_id: 'tu_client_id',
+    client_secret: 'tu_client_secret',
+    redirect_uri: 'http://localhost:3000/callback'
+};
+```
+
+**Ejemplo de uso en nuestro proyecto:**
+```javascript
+// Frontend envía
+fetch('/api/turnos', {
+    headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+});
+
+// Backend verifica
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Token requerido' });
     
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ error: 'Token inválido' });
@@ -263,69 +562,154 @@ const authenticateToken = (req, res, next) => {
     });
 };
 ```
-**¿Por qué es importante?** Protege todas las rutas sensibles del backend.
+
+## 💻 Códigos Más Importantes
+
+### 1. Autenticación JWT (middleware/auth.js)
+```javascript
+const jwt = require('jsonwebtoken');
+
+const authenticateToken = (req, res, next) => {
+    // Extraer el header Authorization del request
+    const authHeader = req.headers['authorization'];
+    // El token viene en formato "Bearer TOKEN", extraemos solo el TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acceso requerido' });
+    }
+    
+    // Verificar que el token sea válido usando la clave secreta
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Token inválido' });
+        // Si es válido, agregar los datos del usuario al request
+        req.user = user;
+        next(); // Continuar al siguiente middleware
+    });
+};
+```
+**¿Por qué es importante?** 
+- **Seguridad**: Protege rutas sensibles verificando identidad
+- **Stateless**: No necesita guardar sesiones en el servidor
+- **Escalable**: Funciona en múltiples servidores sin problemas
+- **Automático**: Se ejecuta antes de cada ruta protegida
 
 ### 2. Conexión a Base de Datos (config/database.js)
 ```javascript
 const mysql = require('mysql2');
 
+// Pool de conexiones para manejar múltiples requests simultáneos
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    host: process.env.DB_HOST,        // Dirección del servidor MySQL
+    user: process.env.DB_USER,        // Usuario de la base de datos
+    password: process.env.DB_PASSWORD, // Contraseña del usuario
+    database: process.env.DB_NAME,    // Nombre de la base de datos
+    waitForConnections: true,         // Esperar si no hay conexiones disponibles
+    connectionLimit: 10,              // Máximo 10 conexiones simultáneas
+    queueLimit: 0                     // Sin límite en la cola de espera
 });
+
+// Función para crear una conexión individual
+const createConnection = async () => {
+    return pool.getConnection();
+};
 ```
-**¿Por qué es importante?** Pool de conexiones para mejor rendimiento.
+**¿Por qué es importante?**
+- **Performance**: Pool reutiliza conexiones en lugar de crear nuevas
+- **Concurrencia**: Maneja múltiples usuarios simultáneamente
+- **Estabilidad**: Evita saturar la base de datos
+- **Eficiencia**: Reduce tiempo de conexión y desconexión
 
 ### 3. API Service Frontend (services/api.js)
 ```javascript
+// Configuración automática de URL según el entorno
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://sonrisitapp-backend.onrender.com'
-    : 'http://localhost:3001';
+    ? 'https://sonrisitapp-backend.onrender.com'  // Producción
+    : 'http://localhost:3001';                    // Desarrollo
 
+// Función que prepara los headers con autenticación
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
+        // Solo agregar Authorization si existe token
         ...(token && { 'Authorization': `Bearer ${token}` })
     };
 };
+
+// Ejemplo de función API con manejo de errores
+const crearTurno = async (turnoData) => {
+    const response = await fetch(`${API_BASE_URL}/turnos`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(turnoData)
+    });
+    
+    if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    
+    return response.json();
+};
 ```
-**¿Por qué es importante?** Maneja la comunicación entre frontend y backend.
+**¿Por qué es importante?**
+- **Centralización**: Todas las llamadas API en un solo lugar
+- **Reutilización**: Headers y configuración compartidos
+- **Mantenimiento**: Fácil cambiar URLs o configuración
+- **Error Handling**: Manejo consistente de errores
 
 ### 4. Controlador de Turnos (controllers/turnoController.js)
 ```javascript
 const crearTurno = async (req, res) => {
+    // Destructuring: extraer datos del body del request
     const { usuario_id, odontologo_id, servicio_id, fecha, hora } = req.body;
     
     try {
-        // Verificar disponibilidad
-        const [existing] = await pool.promise().execute(
+        const connection = await createConnection();
+        
+        // 1. VERIFICAR DISPONIBILIDAD - Evitar turnos duplicados
+        const [existing] = await connection.execute(
             'SELECT * FROM turnos WHERE fecha = ? AND hora = ? AND odontologo_id = ?',
             [fecha, hora, odontologo_id]
         );
         
         if (existing.length > 0) {
+            connection.release(); // Liberar conexión
             return res.status(400).json({ error: 'Horario no disponible' });
         }
         
-        // Crear turno
-        const [result] = await pool.promise().execute(
-            'INSERT INTO turnos (usuario_id, odontologo_id, servicio_id, fecha, hora) VALUES (?, ?, ?, ?, ?)',
-            [usuario_id, odontologo_id, servicio_id, fecha, hora]
+        // 2. CREAR TURNO - Insertar en base de datos
+        const [result] = await connection.execute(
+            'INSERT INTO turnos (usuario_id, odontologo_id, servicio_id, fecha, hora, estado) VALUES (?, ?, ?, ?, ?, ?)',
+            [usuario_id, odontologo_id, servicio_id, fecha, hora, 'reservado']
         );
         
-        res.status(201).json({ id: result.insertId, message: 'Turno creado exitosamente' });
+        // 3. CREAR NOTIFICACIÓN - Informar a administradores
+        await crearNotificacion({
+            usuario_id: 1, // Admin
+            tipo: 'nuevo_turno',
+            titulo: 'Nuevo Turno Reservado',
+            mensaje: `Turno reservado para ${fecha} a las ${hora}`,
+            turno_id: result.insertId
+        });
+        
+        connection.release();
+        res.status(201).json({ 
+            id: result.insertId, 
+            message: 'Turno creado exitosamente' 
+        });
+        
     } catch (error) {
-        res.status(500).json({ error: 'Error al crear turno' });
+        console.error('Error al crear turno:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 ```
-**¿Por qué es importante?** Lógica de negocio principal del sistema.
+**¿Por qué es importante?**
+- **Lógica de Negocio**: Implementa las reglas del sistema
+- **Validación**: Verifica disponibilidad antes de crear
+- **Transacciones**: Maneja múltiples operaciones como una unidad
+- **Notificaciones**: Mantiene informados a los usuarios
 
 ### 5. Componente React Principal (App.js)
 ```javascript
@@ -333,28 +717,45 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 function App() {
+    // Estado global del usuario logueado
     const [user, setUser] = useState(null);
     
+    // useEffect se ejecuta cuando el componente se monta
     useEffect(() => {
+        // Verificar si hay sesión guardada al cargar la app
         const token = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
+        
         if (token && userData) {
+            // Restaurar sesión del usuario
             setUser(JSON.parse(userData));
         }
-    }, []);
+    }, []); // [] significa que solo se ejecuta una vez
     
     return (
         <Router>
             <Routes>
+                {/* Rutas públicas */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login setUser={setUser} />} />
-                <Route path="/dashboard" element={<Dashboard user={user} />} />
+                
+                {/* Rutas protegidas */}
+                <Route path="/dashboard" element={
+                    user ? <Dashboard user={user} /> : <Navigate to="/login" />
+                } />
+                <Route path="/admin" element={
+                    user?.rol === 'admin' ? <Admin user={user} /> : <Navigate to="/" />
+                } />
             </Routes>
         </Router>
     );
 }
 ```
-**¿Por qué es importante?** Maneja el estado global y routing de la aplicación.
+**¿Por qué es importante?**
+- **SPA (Single Page Application)**: Navegación sin recargar página
+- **Estado Global**: Maneja usuario logueado en toda la app
+- **Persistencia**: Mantiene sesión aunque se recargue la página
+- **Protección de Rutas**: Controla acceso según autenticación y roles
 
 ## 🎯 Preguntas Frecuentes en Evaluación Oral
 
@@ -375,6 +776,34 @@ function App() {
 - **Validación de entrada**: Previene inyección SQL
 - **CORS configurado**: Solo permite orígenes autorizados
 
+## 🔧 Herramientas de Desarrollo Utilizadas
+
+### Frontend
+- **React 18**: Librería para interfaces de usuario
+- **React Router**: Navegación entre páginas
+- **Tailwind CSS**: Framework de estilos utility-first
+- **Material Symbols**: Iconos de Google
+- **Vite**: Herramienta de build rápida
+
+### Backend
+- **Node.js**: Entorno de ejecución JavaScript
+- **Express.js**: Framework web minimalista
+- **MySQL2**: Driver para base de datos MySQL
+- **JWT**: Autenticación con tokens
+- **bcrypt**: Encriptación de contraseñas
+- **CORS**: Manejo de peticiones cross-origin
+- **Helmet**: Seguridad con headers HTTP
+- **Nodemon**: Reinicio automático en desarrollo
+
+### Base de Datos
+- **MySQL**: Desarrollo local
+- **PostgreSQL**: Producción en Render
+
+### Deployment
+- **Render**: Backend y base de datos
+- **Vercel/Netlify**: Frontend
+- **GitHub Actions**: CI/CD automático
+
 ### **Base de Datos**
 
 **P: ¿Por qué usaste PostgreSQL en producción y MySQL en desarrollo?**
@@ -387,8 +816,24 @@ function App() {
 **R:**
 - **usuarios → turnos**: Un usuario puede tener muchos turnos (1:N)
 - **odontologos → turnos**: Un odontólogo atiende muchos turnos (1:N)
-- **servicios → turnos**: Un servicio puede estar en muchos turnos (1:N)
+- **servicios → turnos**: Un servicio puede estar en mucos turnos (1:N)
 - **turnos → notificaciones**: Un turno puede generar varias notificaciones (1:N)
+
+```sql
+-- Ejemplo de relaciones con Foreign Keys
+CREATE TABLE turnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    odontologo_id INT,
+    servicio_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    -- Relaciones
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (odontologo_id) REFERENCES odontologos(id) ON DELETE SET NULL,
+    FOREIGN KEY (servicio_id) REFERENCES servicios(id) ON DELETE RESTRICT
+);
+```
 
 ### **Frontend (React)**
 
@@ -420,8 +865,10 @@ function App() {
 **P: ¿Cómo manejas los errores en tu API?**
 **R:**
 ```javascript
+// 1. Try-Catch en controladores
 try {
-    // Operación de base de datos
+    const [result] = await connection.execute('SELECT * FROM usuarios');
+    res.json({ usuarios: result });
 } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ 
@@ -429,6 +876,38 @@ try {
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
 }
+
+// 2. Middleware global de errores
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    
+    // Errores de validación
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({ error: err.message });
+    }
+    
+    // Errores de base de datos
+    if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'El registro ya existe' });
+    }
+    
+    // Error genérico
+    res.status(500).json({ error: 'Error interno del servidor' });
+});
+
+// 3. Validación de entrada
+const validarTurno = (req, res, next) => {
+    const { fecha, hora, usuario_id } = req.body;
+    
+    if (!fecha || !hora || !usuario_id) {
+        return res.status(400).json({ 
+            error: 'Faltan campos obligatorios',
+            required: ['fecha', 'hora', 'usuario_id']
+        });
+    }
+    
+    next();
+};
 ```
 
 ### **Deployment y DevOps**
@@ -484,17 +963,140 @@ SELECT * FROM turnos WHERE fecha = ? AND hora = ? AND odontologo_id = ?
 
 **P: ¿Cómo organizaste los componentes en React?**
 **R:**
-- **Pages**: Componentes de página completa (Login, Dashboard)
-- **Components**: Componentes reutilizables (Button, Modal, Card)
-- **Services**: Lógica de API y comunicación con backend
-- **Hooks**: Custom hooks para lógica compartida (useToast)
+```
+src/
+├── components/           # Componentes reutilizables
+│   ├── common/          # Componentes básicos
+│   │   ├── Button.js
+│   │   ├── Modal.js
+│   │   └── Loading.js
+│   ├── admin/           # Componentes específicos del admin
+│   │   ├── AdminSidebar.js
+│   │   └── AdminDashboard.js
+│   └── NotificationBell.js
+├── pages/               # Páginas completas
+│   ├── Login.js
+│   ├── Dashboard.js
+│   ├── Admin.js
+│   └── Landing.js
+├── services/            # Lógica de API
+│   └── api.js
+├── hooks/               # Custom hooks
+│   ├── useAuth.js
+│   └── useToast.js
+├── utils/               # Funciones auxiliares
+│   ├── dateUtils.js
+│   └── validators.js
+└── styles/              # Estilos globales
+    └── globals.css
+```
+
+**Ejemplo de componente reutilizable:**
+```javascript
+// components/common/Button.js
+const Button = ({ children, variant = 'primary', onClick, disabled }) => {
+    const baseClasses = 'px-4 py-2 rounded-lg font-medium transition-colors';
+    const variants = {
+        primary: 'bg-blue-600 text-white hover:bg-blue-700',
+        secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+        danger: 'bg-red-600 text-white hover:bg-red-700'
+    };
+    
+    return (
+        <button 
+            className={`${baseClasses} ${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={onClick}
+            disabled={disabled}
+        >
+            {children}
+        </button>
+    );
+};
+```
 
 **P: ¿Qué patrón de diseño usaste en el backend?**
 **R:**
-- **MVC**: Separación en Models (DB), Views (JSON), Controllers
-- **Middleware**: Patrón de cadena para autenticación y validación
-- **Repository**: Abstracción de acceso a datos
-- **Singleton**: Pool de conexiones a base de datos
+
+**1. MVC (Model-View-Controller):**
+```
+backend/
+├── models/              # Lógica de datos
+│   ├── Usuario.js
+│   └── Turno.js
+├── views/               # Respuestas JSON (implícitas)
+├── controllers/         # Lógica de negocio
+│   ├── usuarioController.js
+│   └── turnoController.js
+└── routes/              # Definición de rutas
+    ├── usuarios.js
+    └── turnos.js
+```
+
+**2. Middleware Pattern:**
+```javascript
+// Cadena de middlewares
+app.use(cors());                    // 1. Configurar CORS
+app.use(express.json());            // 2. Parsear JSON
+app.use(authenticateToken);         // 3. Verificar autenticación
+app.use(requireAdmin);              // 4. Verificar permisos
+app.use('/turnos', turnosRoutes);   // 5. Ejecutar controlador
+```
+
+**3. Repository Pattern:**
+```javascript
+// Abstrae el acceso a datos
+class TurnoRepository {
+    static async crear(datos) {
+        const connection = await createConnection();
+        const [result] = await connection.execute(
+            'INSERT INTO turnos (usuario_id, fecha, hora) VALUES (?, ?, ?)',
+            [datos.usuario_id, datos.fecha, datos.hora]
+        );
+        connection.release();
+        return result.insertId;
+    }
+    
+    static async obtenerPorUsuario(usuarioId) {
+        const connection = await createConnection();
+        const [turnos] = await connection.execute(
+            'SELECT * FROM turnos WHERE usuario_id = ?',
+            [usuarioId]
+        );
+        connection.release();
+        return turnos;
+    }
+}
+```
+
+**4. Singleton Pattern:**
+```javascript
+// Pool de conexiones (una sola instancia)
+const mysql = require('mysql2');
+
+class DatabaseConnection {
+    constructor() {
+        if (DatabaseConnection.instance) {
+            return DatabaseConnection.instance;
+        }
+        
+        this.pool = mysql.createPool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            connectionLimit: 10
+        });
+        
+        DatabaseConnection.instance = this;
+    }
+    
+    getConnection() {
+        return this.pool.getConnection();
+    }
+}
+
+module.exports = new DatabaseConnection();
+```
 
 ---
 
